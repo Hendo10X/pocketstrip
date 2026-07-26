@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,47 +22,44 @@ type ProjectRow = {
 };
 
 export default function DashboardPage() {
-    const [projects, setProjects] = useState<ProjectRow[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [creating, setCreating] = useState(false);
     const [open, setOpen] = useState(false);
     const [name, setName] = useState("");
-    const [error, setError] = useState<string | null>(null);
+    const queryClient = useQueryClient();
 
-    async function loadProjects() {
-        setLoading(true);
-        try {
-            const data = await apiFetch("/projects");
-            setProjects(data.projects ?? []);
-        } catch (err: any) {
-            setError(err.message ?? "Failed to load projects");
-        } finally {
-            setLoading(false);
-        }
-    }
+    // 1. Fetch Projects with TanStack Query
+    const {
+        data: projects = [],
+        isLoading,
+        isError,
+        error: fetchError,
+    } = useQuery<ProjectRow[]>({
+        queryKey: ["projects"],
+        queryFn: async () => {
+            const res = await apiFetch("/projects");
+            return res.projects ?? [];
+        },
+    });
 
-    useEffect(() => {
-        loadProjects();
-    }, []);
-
-    async function handleCreate(e: React.FormEvent) {
-        e.preventDefault();
-        setError(null);
-        setCreating(true);
-
-        try {
-            await apiFetch("/projects", {
+    // 2. Create Project Mutation
+    const createProjectMutation = useMutation({
+        mutationFn: async (projectName: string) => {
+            return apiFetch("/projects", {
                 method: "POST",
-                body: JSON.stringify({ name }),
+                body: JSON.stringify({ name: projectName }),
             });
+        },
+        onSuccess: () => {
             setName("");
             setOpen(false);
-            await loadProjects();
-        } catch (err: any) {
-            setError(err.message ?? "Failed to create project");
-        } finally {
-            setCreating(false);
-        }
+            // Invalidate the cache to automatically trigger a background refetch
+            queryClient.invalidateQueries({ queryKey: ["projects"] });
+        },
+    });
+
+    function handleCreate(e: React.FormEvent) {
+        e.preventDefault();
+        if (!name.trim()) return;
+        createProjectMutation.mutate(name);
     }
 
     return (
@@ -127,9 +125,11 @@ export default function DashboardPage() {
                                         required
                                     />
                                 </div>
-                                {error && (
+                                {createProjectMutation.isError && (
                                     <p className="text-xs font-medium text-destructive">
-                                        {error}
+                                        {(createProjectMutation.error as Error)
+                                            ?.message ??
+                                            "Failed to create project"}
                                     </p>
                                 )}
                                 <div className="flex justify-end gap-2 pt-2">
@@ -143,10 +143,12 @@ export default function DashboardPage() {
                                     </Button>
                                     <Button
                                         type="submit"
-                                        disabled={creating}
+                                        disabled={
+                                            createProjectMutation.isPending
+                                        }
                                         className="shadow-none hover:bg-primary"
                                     >
-                                        {creating
+                                        {createProjectMutation.isPending
                                             ? "Creating..."
                                             : "Create Project"}
                                     </Button>
@@ -157,14 +159,19 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Content Section */}
-                {loading ? (
+                {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[1, 2].map((i) => (
                             <div
                                 key={i}
-                                className="h-24 rounded-xl border bg-muted/40"
+                                className="h-24 rounded-xl border bg-muted/40 animate-pulse"
                             />
                         ))}
+                    </div>
+                ) : isError ? (
+                    <div className="p-4 border rounded-xl bg-destructive/10 text-destructive text-sm">
+                        {(fetchError as Error)?.message ??
+                            "Error loading projects."}
                     </div>
                 ) : projects.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-12 text-center border rounded-xl bg-card/50">
