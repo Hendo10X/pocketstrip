@@ -6,6 +6,7 @@ import {
     integer,
     boolean,
     uniqueIndex,
+    index,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
@@ -52,6 +53,57 @@ export const plans = pgTable(
         projectSlugUnique: uniqueIndex("plans_project_slug_unique").on(
             table.projectId,
             table.slug,
+        ),
+    }),
+);
+
+export const customers = pgTable(
+    "customers",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        projectId: uuid("project_id")
+            .notNull()
+            .references(() => projects.id, { onDelete: "cascade" }),
+        email: text("email").notNull(),
+        name: text("name"),
+        providerCustomerId: text("provider_customer_id"),
+        metadata: text("metadata"), // JSON string for now
+        createdAt: timestamp("created_at").notNull().defaultNow(),
+    },
+    (table) => ({
+        projectEmailUnique: uniqueIndex("customers_project_email_unique").on(
+            table.projectId,
+            table.email,
+        ),
+    }),
+);
+export const subscriptions = pgTable(
+    "subscriptions",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        projectId: uuid("project_id")
+            .notNull()
+            .references(() => projects.id, { onDelete: "cascade" }),
+        customerId: uuid("customer_id")
+            .notNull()
+            .references(() => customers.id, { onDelete: "restrict" }),
+        planId: uuid("plan_id")
+            .notNull()
+            .references(() => plans.id, { onDelete: "restrict" }),
+        status: text("status").notNull().default("trialing"),
+        providerSubscriptionId: text("provider_subscription_id"),
+        trialEnd: timestamp("trial_end"),
+        currentPeriodStart: timestamp("current_period_start")
+            .notNull()
+            .defaultNow(),
+        currentPeriodEnd: timestamp("current_period_end").notNull(),
+        cancelAt: timestamp("cancel_at"),
+        createdAt: timestamp("created_at").notNull().defaultNow(),
+    },
+    (table) => ({
+        projectStatusIdx: index("subscriptions_project_status_idx").on(
+            table.projectId,
+            table.status,
         ),
     }),
 );
