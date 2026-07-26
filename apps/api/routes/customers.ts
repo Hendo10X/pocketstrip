@@ -3,8 +3,9 @@ import { db, customers } from "@pocketstrip/db";
 import { requireAuth } from "../middleware/auth";
 import { requireMembership } from "../middleware/membership";
 import { eq } from "drizzle-orm";
+import type { Variables } from "../types";
 
-const app = new Hono();
+const app = new Hono<{ Variables: Variables }>();
 
 app.post("/:projectId/customers", requireAuth, requireMembership, async (c) => {
     const projectId = c.req.param("projectId");

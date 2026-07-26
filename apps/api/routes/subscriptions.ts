@@ -3,8 +3,9 @@ import { db, subscriptions, plans, customers } from "@pocketstrip/db";
 import { requireAuth } from "../middleware/auth";
 import { requireMembership } from "../middleware/membership";
 import { eq, and } from "drizzle-orm";
+import type { Variables } from "../types";
 
-const app = new Hono();
+const app = new Hono<{ Variables: Variables }>();
 
 export function computeNextPeriodEnd(from: Date, interval: string): Date {
     const next = new Date(from);

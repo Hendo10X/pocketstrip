@@ -4,8 +4,9 @@ import { paymentProvider } from "../lib/provider";
 import { UnhandledStripeEventError } from "@pocketstrip/providers";
 import { eq } from "drizzle-orm";
 import { computeNextPeriodEnd } from "./subscriptions";
+import type { Variables } from "../types";
 
-const app = new Hono();
+const app = new Hono<{ Variables: Variables }>();
 
 async function findSubscriptionByProviderId(providerSubscriptionId: string) {
     const existing = await db.query.subscriptions.findFirst({

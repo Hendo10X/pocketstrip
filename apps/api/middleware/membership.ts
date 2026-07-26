@@ -1,8 +1,11 @@
 import type { MiddlewareHandler } from "hono";
 import { db, members } from "@pocketstrip/db";
 import { and, eq } from "drizzle-orm";
+import type { Variables } from "../types";
 
-export const requireMembership: MiddlewareHandler = async (c, next) => {
+export const requireMembership: MiddlewareHandler<{
+    Variables: Variables;
+}> = async (c, next) => {
     const user = c.get("user");
     const projectId = c.req.param("projectId");
 

@@ -107,3 +107,15 @@ export const subscriptions = pgTable(
         ),
     }),
 );
+
+export const apiKeys = pgTable("api_keys", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+        .notNull()
+        .references(() => projects.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    keyPrefix: text("key_prefix").notNull(),
+    keyHash: text("key_hash").notNull(),
+    lastUsedAt: timestamp("last_used_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+});

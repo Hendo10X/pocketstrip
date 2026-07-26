@@ -3,11 +3,7 @@ import { db, projects, members } from "@pocketstrip/db";
 import { requireAuth } from "../middleware/auth";
 import { randomBytes } from "crypto";
 import { eq } from "drizzle-orm";
-
-// 1. Tell Hono what to expect in the Context (c)
-type Variables = {
-    user: { id: string }; // Add email/name here if you need them later
-};
+import type { Variables } from "../types";
 
 const app = new Hono<{ Variables: Variables }>();
 
