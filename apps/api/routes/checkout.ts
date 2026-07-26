@@ -1,14 +1,13 @@
 import { Hono } from "hono";
 import { db, plans, customers } from "@pocketstrip/db";
-import { requireAuth } from "../middleware/auth";
-import { requireMembership } from "../middleware/membership";
 import { paymentProvider } from "../lib/provider";
 import { eq, and } from "drizzle-orm";
 import type { Variables } from "../types";
+import { requireProjectAccess } from "../middleware/requireProjectAccess";
 
 const app = new Hono<{ Variables: Variables }>();
 
-app.post("/:projectId/checkout", requireAuth, requireMembership, async (c) => {
+app.post("/:projectId/checkout", requireProjectAccess, async (c) => {
     const projectId = c.req.param("projectId");
     const body = await c.req.json();
 
