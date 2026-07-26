@@ -119,3 +119,14 @@ export const apiKeys = pgTable("api_keys", {
     lastUsedAt: timestamp("last_used_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export const portalSessions = pgTable("portal_sessions", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    customerId: uuid("customer_id")
+        .notNull()
+        .references(() => customers.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+});

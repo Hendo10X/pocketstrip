@@ -1,8 +1,9 @@
 import { Hono } from "hono";
-import { db, customers, plans } from "@pocketstrip/db";
+import { db, customers, plans, portalSessions } from "@pocketstrip/db";
 import { requireApiKey } from "../middleware/apiKey";
 import { paymentProvider } from "../lib/provider";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull, gt } from "drizzle-orm";
+import { randomBytes, createHash } from "crypto";
 import type { Variables } from "../types";
 
 const app = new Hono<{ Variables: Variables }>();
@@ -75,6 +76,31 @@ app.post("/checkout", requireApiKey, async (c) => {
     });
 
     return c.json(result, 201);
+});
+
+app.post("/customers/:customerId/portal-link", requireApiKey, async (c) => {
+    const project = c.get("project");
+    const customerId = c.req.param("customerId");
+
+    const customer = await db.query.customers.findFirst({
+        where: and(
+            eq(customers.id, customerId),
+            eq(customers.projectId, project.id),
+        ),
+    });
+    if (!customer) return c.json({ error: "Customer not found" }, 404);
+
+    const rawToken = randomBytes(32).toString("hex");
+    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await db
+        .insert(portalSessions)
+        .values({ customerId: customer.id, tokenHash, expiresAt });
+
+    return c.json({
+        portalUrl: `${process.env.DASHBOARD_URL}/portal/${rawToken}`,
+    });
 });
 
 export default app;
