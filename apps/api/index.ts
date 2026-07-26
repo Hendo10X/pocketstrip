@@ -8,6 +8,7 @@ import webhooksRoute from "./routes/webhooks";
 import apiKeysRoute from "./routes/api-keys";
 import { requireApiKey } from "./middleware/apiKey";
 import type { Variables } from "./types";
+import v1Route from "./routes/v1";
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -32,6 +33,7 @@ app.route("/projects", customersRoute);
 app.route("/projects", checkoutRoute);
 app.route("/projects", apiKeysRoute);
 app.route("/webhooks", webhooksRoute);
+app.route("/v1", v1Route);
 
 export default {
     port: 4000,

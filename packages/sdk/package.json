@@ -1,0 +1,14 @@
+{
+    "name": "@pocketstrip/sdk",
+    "module": "index.ts",
+    "type": "module",
+    "main": "./index.ts",
+    "types": "./index.ts",
+    "private": true,
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    }
+}
