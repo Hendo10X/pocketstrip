@@ -86,9 +86,11 @@ export class StripeProvider implements PaymentProvider {
                         ? invoice.parent.subscription_details?.subscription
                         : null;
 
+                // Not every invoice belongs to a subscription (e.g. one-off charges).
+                // We only care about subscription invoices, so quietly skip the rest.
                 if (!subscriptionId) {
-                    throw new Error(
-                        "invoice.paid event missing subscription reference",
+                    throw new UnhandledStripeEventError(
+                        "invoice.paid (not subscription-related)",
                     );
                 }
 
@@ -120,8 +122,8 @@ export class StripeProvider implements PaymentProvider {
                         : null;
 
                 if (!subscriptionId) {
-                    throw new Error(
-                        "invoice.payment_failed event missing subscription reference",
+                    throw new UnhandledStripeEventError(
+                        "invoice.payment_failed (not subscription-related)",
                     );
                 }
 

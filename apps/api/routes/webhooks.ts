@@ -7,6 +7,21 @@ import { computeNextPeriodEnd } from "./subscriptions";
 
 const app = new Hono();
 
+async function findSubscriptionByProviderId(providerSubscriptionId: string) {
+    const existing = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.providerSubscriptionId, providerSubscriptionId),
+    });
+
+    if (!existing) {
+        console.error(
+            "Webhook referenced unknown subscription:",
+            providerSubscriptionId,
+        );
+    }
+
+    return existing;
+}
+
 app.post("/stripe", async (c) => {
     const signature = c.req.header("stripe-signature");
 
@@ -68,17 +83,55 @@ app.post("/stripe", async (c) => {
         }
 
         case "subscription.renewed": {
-            // next step
+            const existing = await findSubscriptionByProviderId(
+                event.providerSubscriptionId,
+            );
+            if (!existing) break;
+
+            const plan = await db.query.plans.findFirst({
+                where: eq(plans.id, existing.planId),
+            });
+            if (!plan) break;
+
+            const newPeriodEnd = computeNextPeriodEnd(
+                existing.currentPeriodEnd,
+                plan.billingInterval,
+            );
+
+            await db
+                .update(subscriptions)
+                .set({
+                    status: "active",
+                    currentPeriodStart: existing.currentPeriodEnd,
+                    currentPeriodEnd: newPeriodEnd,
+                })
+                .where(eq(subscriptions.id, existing.id));
             break;
         }
 
         case "subscription.cancelled": {
-            // next step
+            const existing = await findSubscriptionByProviderId(
+                event.providerSubscriptionId,
+            );
+            if (!existing) break;
+
+            await db
+                .update(subscriptions)
+                .set({ status: "cancelled" })
+                .where(eq(subscriptions.id, existing.id));
             break;
         }
 
         case "payment.failed": {
-            // next step
+            const existing = await findSubscriptionByProviderId(
+                event.providerSubscriptionId,
+            );
+            if (!existing) break;
+
+            await db
+                .update(subscriptions)
+                .set({ status: "past_due" })
+                .where(eq(subscriptions.id, existing.id));
             break;
         }
     }
