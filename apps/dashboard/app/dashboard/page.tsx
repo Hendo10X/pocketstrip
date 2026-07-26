@@ -26,7 +26,6 @@ export default function DashboardPage() {
     const [name, setName] = useState("");
     const queryClient = useQueryClient();
 
-    // 1. Fetch Projects with TanStack Query
     const {
         data: projects = [],
         isLoading,
@@ -40,7 +39,6 @@ export default function DashboardPage() {
         },
     });
 
-    // 2. Create Project Mutation
     const createProjectMutation = useMutation({
         mutationFn: async (projectName: string) => {
             return apiFetch("/projects", {
@@ -51,7 +49,7 @@ export default function DashboardPage() {
         onSuccess: () => {
             setName("");
             setOpen(false);
-            // Invalidate the cache to automatically trigger a background refetch
+
             queryClient.invalidateQueries({ queryKey: ["projects"] });
         },
     });

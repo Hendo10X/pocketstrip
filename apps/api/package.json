@@ -15,6 +15,7 @@
     },
     "dependencies": {
         "@pocketstrip/db": "workspace:*",
-        "hono": "^4.12.32"
+        "hono": "^4.12.32",
+        "stripe": "^22.3.2"
     }
 }
