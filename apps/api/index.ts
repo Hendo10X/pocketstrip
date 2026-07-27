@@ -1,6 +1,12 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { db, portalSessions, customers } from "@pocketstrip/db";
+import {
+    db,
+    portalSessions,
+    customers,
+    subscriptions,
+    plans,
+} from "@pocketstrip/db";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { createHash } from "crypto";
 import projectsRoute from "./routes/projects";
@@ -57,7 +63,26 @@ app.get("/portal/:token", async (c) => {
         where: eq(customers.id, session.customerId),
     });
 
-    return c.json({ customer });
+    if (!customer) {
+        return c.json({ error: "Customer not found" }, 404);
+    }
+
+    const customerSubscriptions = await db
+        .select({
+            id: subscriptions.id,
+            status: subscriptions.status,
+            currentPeriodEnd: subscriptions.currentPeriodEnd,
+            cancelAt: subscriptions.cancelAt,
+            planName: plans.name,
+            price: plans.price,
+            currency: plans.currency,
+            billingInterval: plans.billingInterval,
+        })
+        .from(subscriptions)
+        .innerJoin(plans, eq(subscriptions.planId, plans.id))
+        .where(eq(subscriptions.customerId, customer.id));
+
+    return c.json({ customer, subscriptions: customerSubscriptions });
 });
 
 app.route("/projects", projectsRoute);
