@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { db, plans } from "@pocketstrip/db";
+import { eq } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
 import { requireMembership } from "../middleware/membership";
 import type { Variables } from "../types";
@@ -64,6 +65,17 @@ app.post("/:projectId/plans", requireAuth, requireMembership, async (c) => {
         }
         throw err;
     }
+});
+
+app.get("/:projectId/plans", requireAuth, requireMembership, async (c) => {
+    const projectId = c.req.param("projectId");
+
+    const projectPlans = await db
+        .select()
+        .from(plans)
+        .where(eq(plans.projectId, projectId));
+
+    return c.json({ plans: projectPlans });
 });
 
 export default app;
