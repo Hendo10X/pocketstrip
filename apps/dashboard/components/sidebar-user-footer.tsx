@@ -2,8 +2,9 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Logout03Icon } from "@hugeicons/core-free-icons";
 import { SidebarFooter } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 
 export function SidebarUserFooter() {
     const router = useRouter();
@@ -20,8 +21,8 @@ export function SidebarUserFooter() {
 
     return (
         <SidebarFooter className="gap-2 border-t p-3">
-            <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[12px] font-medium">
+            <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-[12px] font-semibold text-brand-foreground">
                     {initial}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -30,18 +31,22 @@ export function SidebarUserFooter() {
                             {name}
                         </p>
                     )}
-                    <p className="truncate text-[11px] leading-4 text-muted-foreground">
+                    <p className="truncate font-geist text-[11px] leading-4 text-muted-foreground">
                         {email}
                     </p>
                 </div>
+                <button
+                    onClick={handleSignOut}
+                    aria-label="Sign out"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground active:scale-[0.96]"
+                >
+                    <HugeiconsIcon
+                        icon={Logout03Icon}
+                        size={16}
+                        strokeWidth={2}
+                    />
+                </button>
             </div>
-            <Button
-                variant="outline"
-                onClick={handleSignOut}
-                className="h-8 w-full rounded-[6px] text-[12px]"
-            >
-                Sign out
-            </Button>
         </SidebarFooter>
     );
 }

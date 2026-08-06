@@ -41,7 +41,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_STYLE: Record<string, string> = {
     trialing: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    active: "bg-brand/20 text-foreground",
     past_due: "bg-destructive/10 text-destructive",
     cancelled: "bg-muted text-muted-foreground",
     expired: "bg-muted text-muted-foreground",
@@ -100,7 +100,7 @@ export default async function PortalPage({
 
             <div className="mt-8">
                 {data.subscriptions.length === 0 ? (
-                    <div className="rounded-xl border border-dashed p-8 text-center">
+                    <div className="rounded-xl bg-muted/40 p-8 text-center">
                         <p className="text-[15px] font-medium">
                             No subscriptions yet
                         </p>
@@ -114,7 +114,7 @@ export default async function PortalPage({
                         {data.subscriptions.map((sub) => (
                             <div
                                 key={sub.id}
-                                className="rounded-xl border bg-card p-5"
+                                className="rounded-xl bg-card p-5 shadow-sm"
                             >
                                 <div className="flex items-center justify-between">
                                     <span className="text-[15px] font-medium">

@@ -3,21 +3,22 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "motion/react";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordField } from "@/components/password-field";
 
 export default function SignInPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        setError(null);
         setIsSubmitting(true);
 
         const { error } = await authClient.signIn.email({ email, password });
@@ -25,7 +26,7 @@ export default function SignInPage() {
         setIsSubmitting(false);
 
         if (error) {
-            setError(error.message ?? "Invalid email or password");
+            toast.error(error.message ?? "Invalid email or password");
             return;
         }
 
@@ -34,12 +35,20 @@ export default function SignInPage() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center px-6">
-            <div className="w-full max-w-90">
+            <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
+                className="w-full max-w-90"
+            >
                 <div className="mb-6 text-center">
                     <Link
                         href="/"
-                        className="text-[15px] font-semibold tracking-tight"
+                        className="inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight"
                     >
+                        <span className="flex h-6 w-6 items-center justify-center rounded-[7px] bg-brand text-[13px] font-bold text-brand-foreground">
+                            P
+                        </span>
                         PocketStrip
                     </Link>
                     <h1 className="mt-4 text-[18px] font-semibold tracking-tight">
@@ -47,7 +56,7 @@ export default function SignInPage() {
                     </h1>
                 </div>
 
-                <div className="rounded-xl border p-6">
+                <div className="rounded-xl bg-card p-6 shadow-sm">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-[12px]">
@@ -69,22 +78,11 @@ export default function SignInPage() {
                             <Label htmlFor="password" className="text-[12px]">
                                 Password
                             </Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                className="h-9 rounded-[8px] text-[13px]"
+                            <PasswordField
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
+                                onChange={setPassword}
                             />
                         </div>
-
-                        {error && (
-                            <p className="text-[12px] text-destructive">
-                                {error}
-                            </p>
-                        )}
 
                         <Button
                             type="submit"
@@ -96,7 +94,7 @@ export default function SignInPage() {
                     </form>
                 </div>
 
-                <p className="mt-5 text-center text-[12px] text-muted-foreground">
+                <p className="mt-5 text-center font-geist text-[12px] text-muted-foreground">
                     Don&apos;t have an account?{" "}
                     <Link
                         href="/sign-up"
@@ -105,7 +103,7 @@ export default function SignInPage() {
                         Sign up
                     </Link>
                 </p>
-            </div>
+            </motion.div>
         </div>
     );
 }

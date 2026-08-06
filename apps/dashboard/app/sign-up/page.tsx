@@ -1,22 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "motion/react";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordField } from "@/components/password-field";
 
 export default function SignUpPage() {
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
-    const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        setError(null);
         setIsSubmitting(true);
 
         const { error } = await authClient.signUp.email({
@@ -28,21 +31,30 @@ export default function SignUpPage() {
         setIsSubmitting(false);
 
         if (error) {
-            setError(error.message ?? "Something went wrong");
+            toast.error(error.message ?? "Something went wrong");
             return;
         }
 
-        window.location.href = "/dashboard";
+        toast.success("Account created — please sign in");
+        router.push("/sign-in");
     }
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center px-6">
-            <div className="w-full max-w-90">
+            <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
+                className="w-full max-w-90"
+            >
                 <div className="mb-6 text-center">
                     <Link
                         href="/"
-                        className="text-[15px] font-semibold tracking-tight"
+                        className="inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight"
                     >
+                        <span className="flex h-6 w-6 items-center justify-center rounded-[7px] bg-brand text-[13px] font-bold text-brand-foreground">
+                            P
+                        </span>
                         PocketStrip
                     </Link>
                     <h1 className="mt-4 text-[18px] font-semibold tracking-tight">
@@ -50,7 +62,7 @@ export default function SignUpPage() {
                     </h1>
                 </div>
 
-                <div className="rounded-xl border p-6">
+                <div className="rounded-xl bg-card p-6 shadow-sm">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="name" className="text-[12px]">
@@ -84,32 +96,24 @@ export default function SignUpPage() {
                             <Label htmlFor="password" className="text-[12px]">
                                 Password
                             </Label>
-                            <Input
-                                id="password"
-                                type="password"
+                            <PasswordField
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                placeholder="••••••••"
-                                className="h-9 rounded-[8px] text-[13px]"
+                                onChange={setPassword}
                             />
                         </div>
-                        {error && (
-                            <p className="text-[12px] text-destructive">
-                                {error}
-                            </p>
-                        )}
                         <Button
                             type="submit"
                             disabled={isSubmitting}
                             className="h-9 w-full rounded-[8px] text-[13px]"
                         >
-                            {isSubmitting ? "Creating account…" : "Create account"}
+                            {isSubmitting
+                                ? "Creating account…"
+                                : "Create account"}
                         </Button>
                     </form>
                 </div>
 
-                <p className="mt-5 text-center text-[12px] text-muted-foreground">
+                <p className="mt-5 text-center font-geist text-[12px] text-muted-foreground">
                     Already have an account?{" "}
                     <Link
                         href="/sign-in"
@@ -118,7 +122,7 @@ export default function SignUpPage() {
                         Sign in
                     </Link>
                 </p>
-            </div>
+            </motion.div>
         </div>
     );
 }
