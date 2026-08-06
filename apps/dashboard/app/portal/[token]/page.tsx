@@ -1,6 +1,3 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-
 type PortalData = {
     customer: { email: string; name: string | null };
     subscriptions: {
@@ -42,13 +39,25 @@ const STATUS_LABEL: Record<string, string> = {
     expired: "Expired",
 };
 
-const STATUS_COLOR: Record<string, string> = {
-    trialing: "text-amber-600",
-    active: "text-emerald-600",
-    past_due: "text-red-600",
-    cancelled: "text-muted-foreground",
-    expired: "text-muted-foreground",
+const STATUS_STYLE: Record<string, string> = {
+    trialing: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    past_due: "bg-destructive/10 text-destructive",
+    cancelled: "bg-muted text-muted-foreground",
+    expired: "bg-muted text-muted-foreground",
 };
+
+function StatusPill({ status }: { status: string }) {
+    return (
+        <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                STATUS_STYLE[status] ?? "bg-muted text-muted-foreground"
+            }`}
+        >
+            {STATUS_LABEL[status] ?? status}
+        </span>
+    );
+}
 
 export default async function PortalPage({
     params,
@@ -60,8 +69,8 @@ export default async function PortalPage({
 
     if ("error" in data) {
         return (
-            <div className="mx-auto flex min-h-screen max-w-120 flex-col items-center justify-center px-6 text-center">
-                <h1 className="text-[18px] font-medium leading-7">
+            <div className="mx-auto flex min-h-screen max-w-100 flex-col items-center justify-center px-6 text-center">
+                <h1 className="text-[18px] font-semibold">
                     This link isn&apos;t valid
                 </h1>
                 <p className="mt-2 text-[13px] leading-5.5 text-muted-foreground">
@@ -72,52 +81,60 @@ export default async function PortalPage({
     }
 
     return (
-        <div className="mx-auto min-h-screen max-w-120 px-6 py-16">
-            <h1 className="text-[24px] font-medium leading-8">
+        <div className="mx-auto min-h-screen max-w-108 px-6 py-16">
+            <div className="mb-10 flex items-center justify-between">
+                <span className="text-[13px] font-semibold tracking-tight">
+                    PocketStrip
+                </span>
+                <span className="text-[12px] text-muted-foreground">
+                    Billing portal
+                </span>
+            </div>
+
+            <h1 className="text-[22px] font-semibold tracking-tight">
                 Your subscription
             </h1>
-            <p className="mt-1 text-[13px] leading-5.5  text-muted-foreground">
+            <p className="mt-1 text-[13px] text-muted-foreground">
                 {data.customer.email}
             </p>
 
             <div className="mt-8">
                 {data.subscriptions.length === 0 ? (
-                    <Card className="rounded-[10px] border p-5 text-center">
-                        <p className="text-[15px] font-medium leading-6">
+                    <div className="rounded-xl border border-dashed p-8 text-center">
+                        <p className="text-[15px] font-medium">
                             No subscriptions yet
                         </p>
-                        <p className="mt-1 text-[13px] leading-5.5  text-muted-foreground">
+                        <p className="mt-1 text-[13px] text-muted-foreground">
                             You don&apos;t have any active subscriptions on this
                             account.
                         </p>
-                    </Card>
+                    </div>
                 ) : (
                     <div className="space-y-3">
                         {data.subscriptions.map((sub) => (
-                            <Card
+                            <div
                                 key={sub.id}
-                                className="rounded-[10px] border p-5"
+                                className="rounded-xl border bg-card p-5"
                             >
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[15px] font-medium leading-6">
+                                    <span className="text-[15px] font-medium">
                                         {sub.planName}
                                     </span>
-                                    <span
-                                        className={`text-[12px] font-medium leading-5 ${STATUS_COLOR[sub.status] ?? ""}`}
-                                    >
-                                        {STATUS_LABEL[sub.status] ?? sub.status}
-                                    </span>
+                                    <StatusPill status={sub.status} />
                                 </div>
-                                <p className="mt-1 text-[13px] leading-5.5 text-muted-foreground">
-                                    {formatMoney(sub.price, sub.currency)} /{" "}
-                                    {sub.billingInterval}
+                                <p className="mt-1 text-[13px] text-muted-foreground tabular-nums">
+                                    {formatMoney(sub.price, sub.currency)}
+                                    <span className="text-muted-foreground/60">
+                                        {" / "}
+                                        {sub.billingInterval}
+                                    </span>
                                 </p>
-                                <p className="mt-3 text-[12px] leading-5 text-muted-foreground">
+                                <p className="mt-4 border-t pt-3 text-[12px] text-muted-foreground">
                                     {sub.cancelAt
                                         ? `Cancels on ${new Date(sub.cancelAt).toLocaleDateString()}`
                                         : `Renews on ${new Date(sub.currentPeriodEnd).toLocaleDateString()}`}
                                 </p>
-                            </Card>
+                            </div>
                         ))}
                     </div>
                 )}

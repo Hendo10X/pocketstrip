@@ -1,5 +1,4 @@
 import { headers } from "next/headers";
-import { Card } from "@/components/ui/card";
 
 async function getProjectBySlug(slug: string, cookie: string) {
     const res = await fetch(
@@ -58,6 +57,28 @@ function formatMoney(amountInMinorUnits: number, currency: string) {
     }).format(amountInMinorUnits / 100);
 }
 
+function Stat({ label, value }: { label: string; value: string | number }) {
+    return (
+        <div className="rounded-xl border bg-card p-5">
+            <p className="text-[12px] text-muted-foreground">{label}</p>
+            <p className="mt-2 text-[26px] leading-8 font-semibold tracking-tight tabular-nums">
+                {value}
+            </p>
+        </div>
+    );
+}
+
+function SectionHeader({ title, count }: { title: string; count: number }) {
+    return (
+        <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-[15px] font-medium">{title}</h2>
+            <span className="text-[12px] text-muted-foreground tabular-nums">
+                {count}
+            </span>
+        </div>
+    );
+}
+
 export default async function ProjectDetailPage({
     params,
 }: {
@@ -71,10 +92,13 @@ export default async function ProjectDetailPage({
 
     if (!projectData) {
         return (
-            <div className="max-w-[1600px] text-center">
-                <p className="text-[13px] text-muted-foreground">
-                    Project not found.
-                </p>
+            <div className="mx-auto w-full max-w-5xl">
+                <div className="flex flex-col items-center rounded-xl border border-dashed py-16 text-center">
+                    <p className="text-[15px] font-medium">Project not found</p>
+                    <p className="mt-1 text-[13px] text-muted-foreground">
+                        It may have been deleted, or you don&apos;t have access.
+                    </p>
+                </div>
             </div>
         );
     }
@@ -88,87 +112,85 @@ export default async function ProjectDetailPage({
     ]);
 
     return (
-        <div className="max-w-[1600px]">
-            <h1 className="text-[24px] font-medium leading-8">
-                {projectData.project.name}
-            </h1>
-            <p className="mt-1 text-[13px] leading-5.5 text-muted-foreground">
-                {projectData.project.slug}
-            </p>
-
-            <div className="mt-6 grid grid-cols-3 gap-6">
-                <Card className="rounded-[10px] border border-neutral-200 p-5 dark:border-neutral-800">
-                    <p className="text-[12px] leading-5 text-muted-foreground">
-                        Active subscriptions
-                    </p>
-                    <p className="mt-1 text-[24px] font-medium leading-8">
-                        {stats.activeSubscriptions}
-                    </p>
-                </Card>
-                <Card className="rounded-[10px] border border-neutral-200 p-5 dark:border-neutral-800">
-                    <p className="text-[12px] leading-5 text-muted-foreground">
-                        Total customers
-                    </p>
-                    <p className="mt-1 text-[24px] font-medium leading-8">
-                        {stats.totalCustomers}
-                    </p>
-                </Card>
+        <div className="mx-auto w-full max-w-5xl">
+            <div className="mb-8">
+                <h1 className="text-[22px] font-semibold tracking-tight">
+                    {projectData.project.name}
+                </h1>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                    Overview of subscriptions, plans, and customers.
+                </p>
             </div>
 
-            <div className="mt-10">
-                <h2 className="text-[18px] font-medium leading-7">Plans</h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+                <Stat
+                    label="Active subscriptions"
+                    value={stats.activeSubscriptions}
+                />
+                <Stat label="Total customers" value={stats.totalCustomers} />
+                <Stat label="Plans" value={plans.length} />
+            </div>
+
+            <section className="mt-10">
+                <SectionHeader title="Plans" count={plans.length} />
                 {plans.length === 0 ? (
-                    <p className="mt-2 text-[13px] leading-5.5 text-muted-foreground">
+                    <div className="rounded-xl border border-dashed p-6 text-center text-[13px] text-muted-foreground">
                         No plans yet.
-                    </p>
+                    </div>
                 ) : (
-                    <div className="mt-3 space-y-2">
+                    <div className="divide-y overflow-hidden rounded-xl border bg-card">
                         {plans.map((plan: any) => (
-                            <Card
+                            <div
                                 key={plan.id}
-                                className="rounded-[10px] border border-neutral-200 p-4 dark:border-neutral-800"
+                                className="flex items-center justify-between px-4 py-3"
                             >
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
                                     <span className="text-[13px] font-medium">
                                         {plan.name}
                                     </span>
-                                    <span className="text-[13px] text-muted-foreground">
-                                        {formatMoney(plan.price, plan.currency)}{" "}
-                                        / {plan.billingInterval}
-                                    </span>
+                                    {plan.trialDays > 0 && (
+                                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                                            {plan.trialDays}-day trial
+                                        </span>
+                                    )}
                                 </div>
-                            </Card>
+                                <span className="text-[13px] text-muted-foreground tabular-nums">
+                                    {formatMoney(plan.price, plan.currency)}
+                                    <span className="text-muted-foreground/60">
+                                        {" / "}
+                                        {plan.billingInterval}
+                                    </span>
+                                </span>
+                            </div>
                         ))}
                     </div>
                 )}
-            </div>
+            </section>
 
-            <div className="mt-10">
-                <h2 className="text-[18px] font-medium leading-7">Customers</h2>
+            <section className="mt-10">
+                <SectionHeader title="Customers" count={customers.length} />
                 {customers.length === 0 ? (
-                    <p className="mt-2 text-[13px] leading-5.5 text-muted-foreground">
+                    <div className="rounded-xl border border-dashed p-6 text-center text-[13px] text-muted-foreground">
                         No customers yet.
-                    </p>
+                    </div>
                 ) : (
-                    <div className="mt-3 space-y-2">
+                    <div className="divide-y overflow-hidden rounded-xl border bg-card">
                         {customers.map((customer: any) => (
-                            <Card
+                            <div
                                 key={customer.id}
-                                className="rounded-[10px] border border-neutral-200 p-4 dark:border-neutral-800"
+                                className="flex items-center justify-between px-4 py-3"
                             >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[13px] font-medium">
-                                        {customer.name ?? customer.email}
-                                    </span>
-                                    <span className="text-[13px] text-muted-foreground">
-                                        {customer.email}
-                                    </span>
-                                </div>
-                            </Card>
+                                <span className="text-[13px] font-medium">
+                                    {customer.name ?? customer.email}
+                                </span>
+                                <span className="text-[13px] text-muted-foreground">
+                                    {customer.email}
+                                </span>
+                            </div>
                         ))}
                     </div>
                 )}
-            </div>
+            </section>
         </div>
     );
 }

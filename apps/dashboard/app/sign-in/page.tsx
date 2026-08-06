@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function SignInPage() {
@@ -31,68 +33,79 @@ export default function SignInPage() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center px-6">
-            <div className="w-full max-w-120 rounded-[10px] border border-neutral-200 p-8 dark:border-neutral-800">
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor="email"
-                            className="text-[13px] font-medium"
-                        >
-                            Email
-                        </Label>
-                        <input
-                            id="email"
-                            type="email"
-                            placeholder="john@example.com"
-                            className="h-10 w-full rounded-[8px] bg-neutral-100 px-3 text-[13px] outline-none placeholder:text-neutral-400 focus:ring-2 focus:ring-neutral-300 dark:bg-neutral-800 dark:placeholder:text-neutral-500"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor="password"
-                            className="text-[13px] font-medium"
-                        >
-                            Password
-                        </Label>
-                        <input
-                            id="password"
-                            type="password"
-                            placeholder="••••••••"
-                            className="h-10 w-full rounded-[8px] bg-neutral-100 px-3 text-[13px] outline-none placeholder:text-neutral-400 focus:ring-2 focus:ring-neutral-300 dark:bg-neutral-800 dark:placeholder:text-neutral-500"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    {error && (
-                        <p className="text-[12px] text-red-600">{error}</p>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="h-10 w-full rounded-[8px] bg-neutral-900 text-[13px] font-medium text-white transition-colors hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900"
+        <div className="flex min-h-screen flex-col items-center justify-center px-6">
+            <div className="w-full max-w-90">
+                <div className="mb-6 text-center">
+                    <Link
+                        href="/"
+                        className="text-[15px] font-semibold tracking-tight"
                     >
-                        {isSubmitting ? "Signing in..." : "Sign in"}
-                    </button>
-                </form>
-            </div>
+                        PocketStrip
+                    </Link>
+                    <h1 className="mt-4 text-[18px] font-semibold tracking-tight">
+                        Sign in to your account
+                    </h1>
+                </div>
 
-            <p className="absolute bottom-8 text-center text-[12px] text-neutral-500">
-                Don&apos;t have an account?{" "}
-                <Link
-                    href="/sign-up"
-                    className="font-medium text-neutral-900 underline underline-offset-4 dark:text-white"
-                >
-                    Sign up
-                </Link>
-            </p>
+                <div className="rounded-xl border p-6">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="email" className="text-[12px]">
+                                Email
+                            </Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="john@example.com"
+                                className="h-9 rounded-[8px] text-[13px]"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                autoFocus
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="password" className="text-[12px]">
+                                Password
+                            </Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                placeholder="••••••••"
+                                className="h-9 rounded-[8px] text-[13px]"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        {error && (
+                            <p className="text-[12px] text-destructive">
+                                {error}
+                            </p>
+                        )}
+
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="h-9 w-full rounded-[8px] text-[13px]"
+                        >
+                            {isSubmitting ? "Signing in…" : "Sign in"}
+                        </Button>
+                    </form>
+                </div>
+
+                <p className="mt-5 text-center text-[12px] text-muted-foreground">
+                    Don&apos;t have an account?{" "}
+                    <Link
+                        href="/sign-up"
+                        className="font-medium text-foreground underline underline-offset-4"
+                    >
+                        Sign up
+                    </Link>
+                </p>
+            </div>
         </div>
     );
 }

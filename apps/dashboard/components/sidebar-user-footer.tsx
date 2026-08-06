@@ -2,12 +2,8 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import {
-    SidebarFooter,
-    SidebarMenu,
-    SidebarMenuItem,
-    SidebarMenuButton,
-} from "@/components/ui/sidebar";
+import { SidebarFooter } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 export function SidebarUserFooter() {
     const router = useRouter();
@@ -18,23 +14,34 @@ export function SidebarUserFooter() {
         router.push("/sign-in");
     }
 
+    const email = session?.user?.email ?? "";
+    const name = session?.user?.name ?? "";
+    const initial = (name || email || "?").charAt(0).toUpperCase();
+
     return (
-        <SidebarFooter className="px-2 py-3">
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <span className="block truncate px-2 text-[12px] leading-5 text-muted-foreground">
-                        {session?.user?.email ?? ""}
-                    </span>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <SidebarMenuButton
-                        onClick={handleSignOut}
-                        className="h-8 rounded-[6px] text-[13px]"
-                    >
-                        Sign out
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
+        <SidebarFooter className="gap-2 border-t p-3">
+            <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[12px] font-medium">
+                    {initial}
+                </div>
+                <div className="min-w-0 flex-1">
+                    {name && (
+                        <p className="truncate text-[12px] leading-4 font-medium">
+                            {name}
+                        </p>
+                    )}
+                    <p className="truncate text-[11px] leading-4 text-muted-foreground">
+                        {email}
+                    </p>
+                </div>
+            </div>
+            <Button
+                variant="outline"
+                onClick={handleSignOut}
+                className="h-8 w-full rounded-[6px] text-[12px]"
+            >
+                Sign out
+            </Button>
         </SidebarFooter>
     );
 }
