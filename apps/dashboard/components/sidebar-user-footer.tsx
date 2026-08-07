@@ -22,7 +22,7 @@ export function SidebarUserFooter() {
     return (
         <SidebarFooter className="gap-2 border-t p-3">
             <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-[12px] font-semibold text-brand-foreground">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-[12px] font-semibold text-background">
                     {initial}
                 </div>
                 <div className="min-w-0 flex-1">

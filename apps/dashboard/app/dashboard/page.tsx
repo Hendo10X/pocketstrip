@@ -74,7 +74,7 @@ export default function DashboardOverviewPage() {
                         <HugeiconsIcon icon={PlusSignIcon} size={15} />
                         New project
                     </DialogTrigger>
-                    <DialogContent className="max-w-100 rounded-[12px]">
+                    <DialogContent className="max-w-100 rounded-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-[16px] font-semibold">
                                 Create project
@@ -118,11 +118,11 @@ export default function DashboardOverviewPage() {
             {isLoading ? (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {Array.from({ length: 3 }).map((_, i) => (
-                        <Skeleton key={i} className="h-24 rounded-xl" />
+                        <Skeleton key={i} className="h-24 rounded-2xl" />
                     ))}
                 </div>
             ) : projects.length === 0 ? (
-                <div className="flex flex-col items-center rounded-xl bg-muted/40 py-16 text-center">
+                <div className="flex flex-col items-center rounded-2xl bg-card py-16 text-center">
                     <p className="text-[15px] font-medium">No projects yet</p>
                     <p className="mt-1 max-w-xs font-geist text-[13px] text-muted-foreground">
                         Create your first project to start accepting
@@ -156,10 +156,10 @@ export default function DashboardOverviewPage() {
                         >
                             <Link
                                 href={`/dashboard/${project.slug}`}
-                                className="group block h-full rounded-xl bg-card p-5 shadow-sm transition-transform duration-150 hover:-translate-y-0.5"
+                                className="group block h-full rounded-2xl bg-card p-5 transition-transform duration-150 hover:-translate-y-0.5"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-brand text-[14px] font-bold text-brand-foreground">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-foreground text-[14px] font-bold text-background">
                                         {project.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="min-w-0">
@@ -172,7 +172,7 @@ export default function DashboardOverviewPage() {
                                     </div>
                                 </div>
                                 <div className="mt-4 flex items-center justify-between">
-                                    <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-medium tracking-wide text-foreground/80 uppercase">
+                                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
                                         {role}
                                     </span>
                                     <HugeiconsIcon

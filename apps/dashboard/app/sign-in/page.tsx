@@ -56,7 +56,7 @@ export default function SignInPage() {
                     </h1>
                 </div>
 
-                <div className="rounded-xl bg-card p-6 shadow-sm">
+                <div className="rounded-2xl bg-card p-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-[12px]">

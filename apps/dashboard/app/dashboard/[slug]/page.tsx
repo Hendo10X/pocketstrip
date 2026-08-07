@@ -59,7 +59,7 @@ function formatMoney(amountInMinorUnits: number, currency: string) {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
     return (
-        <div className="rounded-xl bg-card p-5 shadow-sm">
+        <div className="rounded-2xl bg-card p-5">
             <p className="font-geist text-[12px] text-muted-foreground">
                 {label}
             </p>
@@ -95,7 +95,7 @@ export default async function ProjectDetailPage({
     if (!projectData) {
         return (
             <div className="mx-auto w-full max-w-5xl">
-                <div className="flex flex-col items-center rounded-xl bg-muted/40 py-16 text-center">
+                <div className="flex flex-col items-center rounded-2xl bg-card py-16 text-center">
                     <p className="text-[15px] font-medium">Project not found</p>
                     <p className="mt-1 font-geist text-[13px] text-muted-foreground">
                         It may have been deleted, or you don&apos;t have access.
@@ -136,11 +136,11 @@ export default async function ProjectDetailPage({
             <section className="mt-10">
                 <SectionHeader title="Plans" count={plans.length} />
                 {plans.length === 0 ? (
-                    <div className="rounded-xl bg-muted/40 p-6 text-center font-geist text-[13px] text-muted-foreground">
+                    <div className="rounded-2xl bg-card p-6 text-center font-geist text-[13px] text-muted-foreground">
                         No plans yet.
                     </div>
                 ) : (
-                    <div className="divide-y overflow-hidden rounded-xl bg-card shadow-sm">
+                    <div className="divide-y overflow-hidden rounded-2xl bg-card">
                         {plans.map((plan: any) => (
                             <div
                                 key={plan.id}
@@ -151,7 +151,7 @@ export default async function ProjectDetailPage({
                                         {plan.name}
                                     </span>
                                     {plan.trialDays > 0 && (
-                                        <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-medium text-foreground/80">
+                                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                                             {plan.trialDays}-day trial
                                         </span>
                                     )}
@@ -172,11 +172,11 @@ export default async function ProjectDetailPage({
             <section className="mt-10">
                 <SectionHeader title="Customers" count={customers.length} />
                 {customers.length === 0 ? (
-                    <div className="rounded-xl bg-muted/40 p-6 text-center font-geist text-[13px] text-muted-foreground">
+                    <div className="rounded-2xl bg-card p-6 text-center font-geist text-[13px] text-muted-foreground">
                         No customers yet.
                     </div>
                 ) : (
-                    <div className="divide-y overflow-hidden rounded-xl bg-card shadow-sm">
+                    <div className="divide-y overflow-hidden rounded-2xl bg-card">
                         {customers.map((customer: any) => (
                             <div
                                 key={customer.id}

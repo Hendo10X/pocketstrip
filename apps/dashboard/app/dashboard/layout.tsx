@@ -54,7 +54,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
             {active && (
                 <motion.span
                     layoutId="nav-active"
-                    className="absolute inset-0 rounded-[8px] bg-brand/15"
+                    className="absolute inset-0 rounded-[8px] bg-sidebar-accent"
                     transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 />
             )}

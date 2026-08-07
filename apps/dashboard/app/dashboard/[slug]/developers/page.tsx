@@ -99,7 +99,7 @@ export default function DevelopersPage() {
                         <HugeiconsIcon icon={PlusSignIcon} size={15} />
                         New API key
                     </Button>
-                    <DialogContent className="max-w-100 rounded-[12px]">
+                    <DialogContent className="max-w-100 rounded-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-[16px] font-semibold">
                                 Create API key
@@ -149,14 +149,14 @@ export default function DevelopersPage() {
                     <Skeleton className="h-11 rounded-lg" />
                 </div>
             ) : keys.length === 0 ? (
-                <div className="flex flex-col items-center rounded-xl bg-muted/40 py-16 text-center">
+                <div className="flex flex-col items-center rounded-2xl bg-card py-16 text-center">
                     <p className="text-[15px] font-medium">No API keys yet</p>
                     <p className="mt-1 max-w-xs font-geist text-[13px] text-muted-foreground">
                         Create a key to start integrating the PocketStrip SDK.
                     </p>
                 </div>
             ) : (
-                <div className="overflow-hidden rounded-xl bg-card shadow-sm">
+                <div className="overflow-hidden rounded-2xl bg-card">
                     <table className="w-full text-left text-[13px]">
                         <thead>
                             <tr className="border-b bg-muted/40 font-geist">
@@ -209,7 +209,7 @@ export default function DevelopersPage() {
                 open={!!revealedKey}
                 onOpenChange={() => setRevealedKey(null)}
             >
-                <DialogContent className="max-w-108 rounded-[12px]">
+                <DialogContent className="max-w-108 rounded-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-[16px] font-semibold">
                             Copy your API key
