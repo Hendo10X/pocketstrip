@@ -3,7 +3,7 @@
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Logout03Icon } from "@hugeicons/core-free-icons";
+import { Logout01Icon } from "@hugeicons/core-free-icons";
 import { SidebarFooter } from "@/components/ui/sidebar";
 
 export function SidebarUserFooter() {
@@ -41,7 +41,7 @@ export function SidebarUserFooter() {
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground active:scale-[0.96]"
                 >
                     <HugeiconsIcon
-                        icon={Logout03Icon}
+                        icon={Logout01Icon}
                         size={16}
                         strokeWidth={2}
                     />
