@@ -4,7 +4,7 @@ import type {
     CreateCheckoutInput,
     CheckoutResult,
     VerifiedWebhookEvent,
-} from "./types";
+} from "../provider";
 
 export class UnhandledStripeEventError extends Error {
     constructor(public stripeEventType: string) {
@@ -19,6 +19,66 @@ export class StripeProvider implements PaymentProvider {
     constructor(secretKey: string, webhookSecret: string) {
         this.stripe = new Stripe(secretKey);
         this.webhookSecret = webhookSecret;
+    }
+
+    async createCustomer(input: any): Promise<any> {
+        const params: Stripe.CustomerCreateParams = {
+            ...(input?.email ? { email: input.email } : {}),
+            ...(input?.name ? { name: input.name } : {}),
+            ...(input?.phone ? { phone: input.phone } : {}),
+            ...(input?.metadata ? { metadata: input.metadata } : {}),
+        };
+
+        return this.stripe.customers.create(params);
+    }
+
+    async updateCustomer(customerId: string, input: any): Promise<any> {
+        const params: Stripe.CustomerUpdateParams = {
+            ...(input?.email ? { email: input.email } : {}),
+            ...(input?.name ? { name: input.name } : {}),
+            ...(input?.phone ? { phone: input.phone } : {}),
+            ...(input?.metadata ? { metadata: input.metadata } : {}),
+        };
+
+        return this.stripe.customers.update(customerId, params);
+    }
+
+    async deleteCustomer(customerId: string): Promise<void> {
+        await this.stripe.customers.del(customerId);
+    }
+
+    async createSubscription(input: any): Promise<any> {
+        const params: Stripe.SubscriptionCreateParams = {
+            customer: input?.customerId ?? input?.customer,
+            items: input?.items ?? [{ price: input?.priceId }],
+            ...(input?.trialPeriodDays !== undefined
+                ? { trial_period_days: input.trialPeriodDays }
+                : {}),
+            ...(input?.metadata ? { metadata: input.metadata } : {}),
+            ...(input?.defaultPaymentMethod
+                ? { default_payment_method: input.defaultPaymentMethod }
+                : {}),
+            ...(input?.paymentBehavior
+                ? { payment_behavior: input.paymentBehavior }
+                : {}),
+            ...(input?.collectionMethod
+                ? { collection_method: input.collectionMethod }
+                : {}),
+        };
+
+        return this.stripe.subscriptions.create(params);
+    }
+
+    async pauseSubscription(providerSubscriptionId: string): Promise<void> {
+        await this.stripe.subscriptions.update(providerSubscriptionId, {
+            pause_collection: { behavior: "void" },
+        });
+    }
+
+    async resumeSubscription(providerSubscriptionId: string): Promise<void> {
+        await this.stripe.subscriptions.update(providerSubscriptionId, {
+            pause_collection: null as any,
+        });
     }
 
     async createCheckout(input: CreateCheckoutInput): Promise<CheckoutResult> {
