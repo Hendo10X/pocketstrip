@@ -7,6 +7,7 @@ let pocketstripApp;
     pocketStrip.setupSwaggerDocs();
     pocketStrip.setupCorsConfig();
     pocketStrip.setupRoutes();
+    pocketStrip.registerRoutes();
 
     pocketstripApp = pocketStrip.getApp();
    

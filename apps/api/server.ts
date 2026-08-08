@@ -1,4 +1,4 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { swaggerUI } from "@hono/swagger-ui";
 import {
@@ -88,6 +88,141 @@ export class PocketStripServer {
     };
 
     public setupRoutes() {
+        const healthRoute = createRoute({
+            method: "get",
+            path: "/healthz",
+            tags: ["Health"],
+            summary: "Health check",
+            description: "Returns the API health status",
+            responses: {
+                200: {
+                    description: "Service is healthy",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.string(),
+                            }),
+                        },
+                    },
+                },
+            },
+        });
+
+        this.app.openapi(healthRoute, (c) =>
+            c.json({ status: "PocketStrip Service is healthy!" }),
+        );
+
+        const testApiKeyRoute = createRoute({
+            method: "get",
+            path: "/test-api-key",
+            tags: ["Authentication"],
+            summary: "Validate API key",
+            description: "Validates the supplied API key and returns the owning project",
+            responses: {
+                200: {
+                    description: "API key is valid",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                message: z.string(),
+                                project: z.object({
+                                    name: z.string(),
+                                }),
+                            }),
+                        },
+                    },
+                },
+                401: { description: "Unauthorized" },
+            },
+        });
+
+        this.app.use("/test-api-key", requireApiKey);
+
+        this.app.openapi(testApiKeyRoute, async (c) => {
+            const project = c.get("project");
+            return c.json({
+                message: "API key is valid!",
+                project: { name: project.name },
+            });
+        });
+
+        const portalRoute = createRoute({
+            method: "get",
+            path: "/portal/{token}",
+            tags: ["Portal"],
+            summary: "Access customer portal",
+            description: "Validates a portal token and returns customer subscription information",
+            request: {
+                params: z.object({
+                    token: z.string(),
+                }),
+            },
+            responses: {
+                200: {
+                    description: "Portal data returned",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                customer: z.unknown(),
+                                subscriptions: z.unknown(),
+                            }),
+                        },
+                    },
+                },
+                401: { description: "Portal token invalid or expired" },
+                404: { description: "Customer not found" },
+            },
+        });
+
+        this.app.openapi(portalRoute, async (c) => {
+            const rawToken = c.req.param("token");
+            const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+
+            const [session] = await db
+                .update(portalSessions)
+                .set({ usedAt: new Date() })
+                .where(
+                    and(
+                        eq(portalSessions.tokenHash, tokenHash),
+                        isNull(portalSessions.usedAt),
+                        gt(portalSessions.expiresAt, new Date()),
+                    ),
+                )
+                .returning();
+
+            if (!session) {
+                return c.json(
+                    { error: "This link is invalid, expired, or already used" },
+                    401,
+                );
+            }
+
+            const customer = await db.query.customers.findFirst({
+                where: eq(customers.id, session.customerId),
+            });
+
+            if (!customer) {
+                return c.json({ error: "Customer not found" }, 404);
+            }
+
+            const customerSubscriptions = await db
+                .select({
+                    id: subscriptions.id,
+                    status: subscriptions.status,
+                    currentPeriodEnd: subscriptions.currentPeriodEnd,
+                    cancelAt: subscriptions.cancelAt,
+                    planName: plans.name,
+                    price: plans.price,
+                    currency: plans.currency,
+                    billingInterval: plans.billingInterval,
+                })
+                .from(subscriptions)
+                .innerJoin(plans, eq(subscriptions.planId, plans.id))
+                .where(eq(subscriptions.customerId, customer.id));
+
+            return c.json({ customer, subscriptions: customerSubscriptions });
+        });
+
         // PocketStrip health status
         this.app.get("/healthz", (c) => c.json({ status: "PocketStrip Service is healthy!" }));
 
