@@ -15,7 +15,8 @@ import projectsRoute from "./routes/projects";
 import plansRoute from "./routes/plans";
 import customersRoute from "./routes/customers";
 import checkoutRoute from "./routes/checkout";
-import webhooksRoute from "./routes/webhooks";
+import stripeWebhookRoute from "./routes/stripe-webhook";
+import paystackWebhookRoute from "./routes/paystack-webhook";
 import apiKeysRoute from "./routes/api-keys";
 import v1Route from "./routes/v1";
 import { requireApiKey } from "./middleware/apiKey";
@@ -133,7 +134,8 @@ app.route("/projects", plansRoute);
 app.route("/projects", customersRoute);
 app.route("/projects", checkoutRoute);
 app.route("/projects", apiKeysRoute);
-app.route("/webhooks", webhooksRoute);
+app.route("/webhooks", stripeWebhookRoute);
+app.route("/webhooks", paystackWebhookRoute);
 app.route("/v1", v1Route);
 
 export default {
