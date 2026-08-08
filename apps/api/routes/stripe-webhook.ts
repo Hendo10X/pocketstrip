@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db, subscriptions, plans } from "@pocketstrip/db";
-import { paymentProvider } from "../lib/provider";
+import { verifyWebhookForProvider } from "../lib/provider";
 import { UnhandledStripeEventError } from "@pocketstrip/providers";
 import { eq } from "drizzle-orm";
 import { computeNextPeriodEnd } from "./subscriptions";
@@ -34,7 +34,7 @@ app.post("/stripe", async (c) => {
 
     let event;
     try {
-        event = await paymentProvider.verifyWebhook(rawBody, signature);
+        event = await verifyWebhookForProvider("stripe", rawBody, signature);
     } catch (err) {
         if (err instanceof UnhandledStripeEventError) {
             return c.json({ received: true, ignored: true });

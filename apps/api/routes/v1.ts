@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { db, customers, plans, portalSessions } from "@pocketstrip/db";
 import { requireApiKey } from "../middleware/apiKey";
-import { paymentProvider } from "../lib/provider";
+import { getProviderForProject } from "../lib/provider";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { randomBytes, createHash } from "crypto";
 import type { Variables } from "../types";
@@ -59,7 +59,9 @@ app.post("/checkout", requireApiKey, async (c) => {
     });
     if (!customer) return c.json({ error: "Customer not found" }, 404);
 
-    const result = await paymentProvider.createCheckout({
+    const provider = await getProviderForProject(project.id);
+
+    const result = await provider.createCheckout({
         customerEmail: customer.email,
         planName: plan.name,
         priceInMinorUnits: plan.price,

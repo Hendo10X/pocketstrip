@@ -1,99 +1,20 @@
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import {
-    db,
-    portalSessions,
-    customers,
-    subscriptions,
-    plans,
-} from "@pocketstrip/db";
-import { eq, and, isNull, gt } from "drizzle-orm";
-import { createHash } from "crypto";
-import projectsRoute from "./routes/projects";
-import plansRoute from "./routes/plans";
-import customersRoute from "./routes/customers";
-import checkoutRoute from "./routes/checkout";
-import webhooksRoute from "./routes/webhooks";
-import apiKeysRoute from "./routes/api-keys";
-import v1Route from "./routes/v1";
-import { requireApiKey } from "./middleware/apiKey";
-import type { Variables } from "./types";
+import { PocketStripServer } from "./server";
 
-const app = new Hono<{ Variables: Variables }>();
+let pocketstripApp;
 
-app.use(
-    "*",
-    cors({
-        origin: process.env.DASHBOARD_URL ?? "http://localhost:3000",
-        credentials: true,
-    }),
-);
+(() => {
+    const pocketStrip = new PocketStripServer();
+    pocketStrip.setupSwaggerDocs();
+    pocketStrip.setupCorsConfig();
+    pocketStrip.setupRoutes();
+    pocketStrip.registerRoutes();
 
-app.get("/health", (c) => c.json({ status: "ok" }));
-
-app.get("/test-api-key", requireApiKey, (c) => {
-    const project = c.get("project");
-    return c.json({ message: "Valid key!", project: project.name });
-});
-
-app.get("/portal/:token", async (c) => {
-    const rawToken = c.req.param("token");
-    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
-
-    const [session] = await db
-        .update(portalSessions)
-        .set({ usedAt: new Date() })
-        .where(
-            and(
-                eq(portalSessions.tokenHash, tokenHash),
-                isNull(portalSessions.usedAt),
-                gt(portalSessions.expiresAt, new Date()),
-            ),
-        )
-        .returning();
-
-    if (!session) {
-        return c.json(
-            { error: "This link is invalid, expired, or already used" },
-            401,
-        );
-    }
-
-    const customer = await db.query.customers.findFirst({
-        where: eq(customers.id, session.customerId),
-    });
-
-    if (!customer) {
-        return c.json({ error: "Customer not found" }, 404);
-    }
-
-    const customerSubscriptions = await db
-        .select({
-            id: subscriptions.id,
-            status: subscriptions.status,
-            currentPeriodEnd: subscriptions.currentPeriodEnd,
-            cancelAt: subscriptions.cancelAt,
-            planName: plans.name,
-            price: plans.price,
-            currency: plans.currency,
-            billingInterval: plans.billingInterval,
-        })
-        .from(subscriptions)
-        .innerJoin(plans, eq(subscriptions.planId, plans.id))
-        .where(eq(subscriptions.customerId, customer.id));
-
-    return c.json({ customer, subscriptions: customerSubscriptions });
-});
-
-app.route("/projects", projectsRoute);
-app.route("/projects", plansRoute);
-app.route("/projects", customersRoute);
-app.route("/projects", checkoutRoute);
-app.route("/projects", apiKeysRoute);
-app.route("/webhooks", webhooksRoute);
-app.route("/v1", v1Route);
+    pocketstripApp = pocketStrip.getApp();
+   
+})();
 
 export default {
     port: 4000,
-    fetch: app.fetch,
-};
+    fetch: pocketstripApp.fetch,
+    pocketstripApp,
+}
