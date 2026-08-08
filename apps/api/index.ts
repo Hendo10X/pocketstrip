@@ -1,5 +1,6 @@
-import { Hono } from "hono";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
+import { swaggerUI } from "@hono/swagger-ui";
 import {
     db,
     portalSessions,
@@ -9,6 +10,7 @@ import {
 } from "@pocketstrip/db";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { createHash } from "crypto";
+// import { z } from "zod";
 import projectsRoute from "./routes/projects";
 import plansRoute from "./routes/plans";
 import customersRoute from "./routes/customers";
@@ -19,7 +21,25 @@ import v1Route from "./routes/v1";
 import { requireApiKey } from "./middleware/apiKey";
 import type { Variables } from "./types";
 
-const app = new Hono<{ Variables: Variables }>();
+const app = new OpenAPIHono<{ Variables: Variables }>();
+
+app.doc("/openapi.json", {
+    openapi: "3.0.0",
+    info: {
+        version: "1.0.0",
+        title: "Pocketstrip API",
+        description: "Subscription management API for Pocketstrip",
+        contact: {
+            name: "Pocketstrip Support",
+        },
+    },
+    servers: [
+        {
+            url: process.env.API_URL ?? "http://localhost:4000",
+            description: "API Server",
+        },
+    ],
+});
 
 app.use(
     "*",
@@ -28,6 +48,29 @@ app.use(
         credentials: true,
     }),
 );
+
+// Swagger UI Documentation
+app.get("/docs", swaggerUI({ url: "/openapi.json" }));
+app.get("/redoc", (c) => {
+    return c.html(`
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>Pocketstrip API - ReDoc</title>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+                <style>
+                    body { margin: 0; padding: 0; }
+                </style>
+            </head>
+            <body>
+                <redoc spec-url='/openapi.json'></redoc>
+                <script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>
+            </body>
+        </html>
+    `);
+});
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 
