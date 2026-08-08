@@ -130,3 +130,25 @@ export const portalSessions = pgTable("portal_sessions", {
     usedAt: timestamp("used_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export const projectProviders = pgTable(
+    "project_providers",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        projectId: uuid("project_id")
+            .notNull()
+            .references(() => projects.id, { onDelete: "cascade" }),
+        provider: text("provider").notNull(),
+        publicKey: text("public_key"),
+        secretKeyEnc: text("secret_key_enc").notNull(),
+        webhookSecret: text("webhook_secret"),
+        isDefault: boolean("is_default").notNull().default(false),
+        createdAt: timestamp("created_at").notNull().defaultNow(),
+    },
+    (table) => ({
+        projectProviderUnique: uniqueIndex("project_provider_unique").on(
+            table.projectId,
+            table.provider,
+        ),
+    }),
+);

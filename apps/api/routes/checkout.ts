@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db, plans, customers } from "@pocketstrip/db";
-import { paymentProvider } from "../lib/provider";
+import { getProviderForProject } from "../lib/provider";
 import { eq, and } from "drizzle-orm";
 import type { Variables } from "../types";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
@@ -29,7 +29,9 @@ app.post("/:projectId/checkout", requireProjectAccess, async (c) => {
     if (!customer)
         return c.json({ error: "Customer not found in this project" }, 404);
 
-    const result = await paymentProvider.createCheckout({
+    const provider = await getProviderForProject(projectId);
+
+    const result = await provider.createCheckout({
         customerEmail: customer.email,
         planName: plan.name,
         priceInMinorUnits: plan.price,
