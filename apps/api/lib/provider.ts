@@ -3,6 +3,10 @@ import { eq } from "drizzle-orm";
 import { StripeProvider } from "../../../packages/providers/stripe";
 import { PayStackProvider } from "../../../packages/providers/paystack";
 import { decryptSecret } from "../../../packages/providers/crypto";
+import {
+    UnhandledStripeEventError,
+    UnhandledPaystackEventError,
+} from "@pocketstrip/providers";
 
 export async function getProviderForProject(projectId: string) {
     // choose the project's default provider (or first) and construct adapter
@@ -59,7 +63,16 @@ export async function verifyWebhookForProvider(
                 return event;
             }
         } catch (err) {
-            // try next config if verification failed
+            // A verified-but-unhandled event type means the signature already
+            // matched this config — surface it so the route can reply
+            // {ignored:true} (a 200) instead of retrying forever. Only genuine
+            // signature mismatches fall through to the next configured row.
+            if (
+                err instanceof UnhandledStripeEventError ||
+                err instanceof UnhandledPaystackEventError
+            ) {
+                throw err;
+            }
             continue;
         }
     }

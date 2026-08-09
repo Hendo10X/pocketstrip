@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "pocketstrip",
@@ -18,8 +17,10 @@
     "apps/api": {
       "name": "api",
       "dependencies": {
+        "@hono/swagger-ui": "^0.2.1",
         "@hono/zod-openapi": "^0.16.4",
         "@pocketstrip/db": "workspace:*",
+        "@pocketstrip/providers": "workspace:*",
         "hono": "^4.12.32",
         "stripe": "^22.3.2",
         "zod": "^3.23.11",
@@ -82,6 +83,12 @@
         "@types/pg": "^8.20.0",
         "drizzle-kit": "^0.31.10",
       },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/providers": {
+      "name": "@pocketstrip/providers",
       "peerDependencies": {
         "typescript": "^5",
       },
@@ -404,6 +411,8 @@
     "@pocketstrip/auth": ["@pocketstrip/auth@workspace:packages/auth"],
 
     "@pocketstrip/db": ["@pocketstrip/db@workspace:packages/db"],
+
+    "@pocketstrip/providers": ["@pocketstrip/providers@workspace:packages/providers"],
 
     "@pocketstrip/sdk": ["@pocketstrip/sdk@workspace:packages/sdk"],
 
@@ -1530,6 +1539,8 @@
     "@unrs/resolver-binding-wasm32-wasi/@emnapi/runtime": ["@emnapi/runtime@1.10.0", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-ewvYlk86xUoGI0zQRNq/mC+16R1QeDlKQy21Ki3oSYXNgLb45GV1P6A0M+/s6nyCuNDqe5VpaY84BzXGwVbwFA=="],
 
     "ajv-formats/ajv": ["ajv@8.20.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA=="],
+
+    "api/@hono/swagger-ui": ["@hono/swagger-ui@0.2.2", "", { "peerDependencies": { "hono": "*" } }, "sha512-Bco6XdKkTP7yIVWXpquLQayvjwzDmsmsESjF7VcrU/ZPTYafGvvpHf7Z6PHTWyp+JpdYORZXlyZ75T3At2KfAA=="],
 
     "api/@hono/zod-openapi": ["@hono/zod-openapi@0.16.4", "", { "dependencies": { "@asteasolutions/zod-to-openapi": "^7.1.0", "@hono/zod-validator": "0.3.0" }, "peerDependencies": { "hono": ">=4.3.6", "zod": "3.*" } }, "sha512-mnF6GthBaKex0D5PsY/4lYNtkaGJNE38bjeUI//EUqq7Ee4TNm2su35IUiFH4HcmJp5fWYMLyOJOpjnkClzEGw=="],
 
