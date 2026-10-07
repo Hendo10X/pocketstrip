@@ -170,3 +170,55 @@ export const webhookEvents = pgTable("webhook_events", {
     receivedAt: timestamp("received_at").notNull().defaultNow(),
     payload: text("payload"), // raw event JSON, for debugging/replay
 });
+
+// Features a plan grants, used by the entitlements API. `limit` is null for a
+// simple boolean feature, or a numeric cap for metered features.
+export const planFeatures = pgTable(
+    "plan_features",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        planId: uuid("plan_id")
+            .notNull()
+            .references(() => plans.id, { onDelete: "cascade" }),
+        key: text("key").notNull(), // e.g. "reports", "seats", "api_calls"
+        limit: integer("limit"), // null = unlimited / boolean feature
+        createdAt: timestamp("created_at").notNull().defaultNow(),
+    },
+    (table) => ({
+        planKeyUnique: uniqueIndex("plan_features_plan_key_unique").on(
+            table.planId,
+            table.key,
+        ),
+    }),
+);
+
+// Payment history. One row per provider invoice (subscription renewal) or
+// failed payment, populated from webhooks.
+export const invoices = pgTable(
+    "invoices",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        projectId: uuid("project_id")
+            .notNull()
+            .references(() => projects.id, { onDelete: "cascade" }),
+        customerId: uuid("customer_id")
+            .notNull()
+            .references(() => customers.id, { onDelete: "restrict" }),
+        subscriptionId: uuid("subscription_id").references(
+            () => subscriptions.id,
+            { onDelete: "set null" },
+        ),
+        amount: integer("amount").notNull(), // minor units
+        currency: text("currency").notNull().default("usd"),
+        status: text("status").notNull(), // "paid" | "failed"
+        providerInvoiceId: text("provider_invoice_id"),
+        paidAt: timestamp("paid_at"),
+        createdAt: timestamp("created_at").notNull().defaultNow(),
+    },
+    (table) => ({
+        projectCreatedIdx: index("invoices_project_created_idx").on(
+            table.projectId,
+            table.createdAt,
+        ),
+    }),
+);
