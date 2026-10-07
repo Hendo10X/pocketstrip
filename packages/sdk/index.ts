@@ -46,4 +46,28 @@ export class Pocket {
             body: JSON.stringify(input),
         });
     }
+
+    // Does the customer have access to a feature?
+    access(
+        customerId: string,
+        feature: string,
+    ): Promise<{
+        hasAccess: boolean;
+        reason: string;
+        limit: number | null;
+        subscription: { id: string; status: string } | null;
+    }> {
+        return this.request(
+            `/v1/customers/${encodeURIComponent(customerId)}/access?feature=${encodeURIComponent(feature)}`,
+        );
+    }
+
+    // The customer's full resolved feature set.
+    entitlements(
+        customerId: string,
+    ): Promise<{ features: { key: string; limit: number | null }[] }> {
+        return this.request(
+            `/v1/customers/${encodeURIComponent(customerId)}/entitlements`,
+        );
+    }
 }

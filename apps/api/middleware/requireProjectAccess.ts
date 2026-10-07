@@ -4,6 +4,7 @@ import { db, members, projects, apiKeys } from "@pocketstrip/db";
 import { createHash } from "crypto";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@pocketstrip/auth";
+import { safeEqualHex } from "../lib/secure-compare";
 
 export const requireProjectAccess: MiddlewareHandler<{
     Variables: Variables;
@@ -30,7 +31,7 @@ export const requireProjectAccess: MiddlewareHandler<{
         const providedHash = createHash("sha256")
             .update(providedKey)
             .digest("hex");
-        if (providedHash !== candidate.keyHash)
+        if (!safeEqualHex(providedHash, candidate.keyHash))
             return c.json({ error: "Invalid API key" }, 401);
 
         if (candidate.projectId !== projectId) {

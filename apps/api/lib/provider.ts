@@ -9,10 +9,14 @@ import {
 } from "@pocketstrip/providers";
 
 export async function getProviderForProject(projectId: string) {
-    // choose the project's default provider (or first) and construct adapter
-    const row = await db.query.projectProviders.findFirst({
+    // Choose the project's default provider, falling back to the first
+    // configured one. A project can have several providers, so we must not
+    // pick an arbitrary row — that could charge through the wrong provider.
+    const rows = await db.query.projectProviders.findMany({
         where: eq(projectProviders.projectId, projectId),
     });
+
+    const row = rows.find((r) => r.isDefault) ?? rows[0];
 
     if (!row) {
         throw new Error("No payment provider configured for project");
