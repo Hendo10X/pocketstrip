@@ -1,4 +1,4 @@
-import { db, subscriptions, plans, webhookEvents } from "@pocketstrip/db";
+import { db, subscriptions, plans, webhookEvents, invoices } from "@pocketstrip/db";
 import { eq } from "drizzle-orm";
 import { computeNextPeriodEnd } from "./subscriptions";
 import type { VerifiedWebhookEvent } from "@pocketstrip/providers";
@@ -73,7 +73,7 @@ export async function handleVerifiedEvent(
             const currentPeriodEnd =
                 trialEnd ?? computeNextPeriodEnd(now, plan.billingInterval);
 
-            await db
+            const [sub] = await db
                 .insert(subscriptions)
                 .values({
                     projectId,
@@ -87,7 +87,24 @@ export async function handleVerifiedEvent(
                 })
                 // Defense-in-depth: even if the same provider subscription
                 // arrives twice, the partial unique index keeps it to one row.
-                .onConflictDoNothing();
+                .onConflictDoNothing()
+                .returning();
+
+            // Record the initial payment (unless the sub started on a trial,
+            // where no charge has happened yet). `sub` is undefined on conflict,
+            // i.e. a duplicate delivery — don't double-record.
+            if (sub && !trialEnd) {
+                await db.insert(invoices).values({
+                    projectId,
+                    customerId,
+                    subscriptionId: sub.id,
+                    amount: plan.price,
+                    currency: plan.currency,
+                    status: "paid",
+                    providerInvoiceId: event.providerEventId,
+                    paidAt: now,
+                });
+            }
             break;
         }
 
@@ -115,6 +132,17 @@ export async function handleVerifiedEvent(
                     currentPeriodEnd: newPeriodEnd,
                 })
                 .where(eq(subscriptions.id, existing.id));
+
+            await db.insert(invoices).values({
+                projectId: existing.projectId,
+                customerId: existing.customerId,
+                subscriptionId: existing.id,
+                amount: plan.price,
+                currency: plan.currency,
+                status: "paid",
+                providerInvoiceId: event.providerEventId,
+                paidAt: new Date(),
+            });
             break;
         }
 
@@ -126,7 +154,7 @@ export async function handleVerifiedEvent(
 
             await db
                 .update(subscriptions)
-                .set({ status: "cancelled" })
+                .set({ status: "cancelled", cancelAt: new Date() })
                 .where(eq(subscriptions.id, existing.id));
             break;
         }
@@ -141,6 +169,21 @@ export async function handleVerifiedEvent(
                 .update(subscriptions)
                 .set({ status: "past_due" })
                 .where(eq(subscriptions.id, existing.id));
+
+            const plan = await db.query.plans.findFirst({
+                where: eq(plans.id, existing.planId),
+            });
+
+            await db.insert(invoices).values({
+                projectId: existing.projectId,
+                customerId: existing.customerId,
+                subscriptionId: existing.id,
+                amount: plan?.price ?? 0,
+                currency: plan?.currency ?? "usd",
+                status: "failed",
+                providerInvoiceId: event.providerEventId,
+                paidAt: null,
+            });
             break;
         }
     }

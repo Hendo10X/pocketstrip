@@ -1,24 +1,24 @@
-// This file defines the interface for a payment provider, which can be implemented by different payment service providers (e.g., Stripe, PayPal, etc.). 
-// It includes methods for creating a checkout session, verifying webhook events, and canceling subscriptions. 
-// The interfaces also define the structure of the input and output data for these methods.
+// The PaymentProvider contract that every provider adapter (Stripe, Paystack,
+// …) implements. It is intentionally minimal — only the operations the app
+// actually calls today — and grows per-feature with concrete types rather than
+// `any`, so the compiler keeps adapters interchangeable and correct.
 
 export interface PaymentProvider {
-    // customer management.
-    createCustomer(input: any): Promise<any>; // 'any' placeholder used temporarily, swap to concrete type.
-    updateCustomer(customerId: string, input: any): Promise<any>;
-    deleteCustomer(customerId: string): Promise<void>;
-
-    // billing management.
     createCheckout(input: CreateCheckoutInput): Promise<CheckoutResult>;
-    createSubscription(input: any): Promise<any>; 
-    cancelSubscription(providerSubscriptionId: string): Promise<void>;
-    pauseSubscription(providerSubscriptionId: string): Promise<void>;
-    resumeSubscription(providerSubscriptionId: string): Promise<void>;
-
+    cancelSubscription(
+        providerSubscriptionId: string,
+        options?: CancelOptions,
+    ): Promise<void>;
     verifyWebhook(
         payload: string,
         signature: string,
     ): Promise<VerifiedWebhookEvent>;
+}
+
+export interface CancelOptions {
+    // When true, cancel at the end of the current billing period rather than
+    // immediately. Providers without native support cancel immediately.
+    atPeriodEnd?: boolean;
 }
 
 export interface CreateCheckoutInput {
@@ -51,4 +51,3 @@ export interface VerifiedWebhookEvent {
     metadata: Record<string, string>;
     raw: unknown;
 }
-

@@ -4,6 +4,7 @@ import type {
     CreateCheckoutInput,
     CheckoutResult,
     VerifiedWebhookEvent,
+    CancelOptions,
 } from "../provider";
 import type { paystackCreateCheckoutResponse } from "./types";
 
@@ -134,25 +135,33 @@ export class PayStackProvider implements PaymentProvider {
         });
     }
 
-    async cancelSubscription(providerSubscriptionId: string): Promise<void> {
+    async cancelSubscription(
+        providerSubscriptionId: string,
+        _options?: CancelOptions,
+    ): Promise<void> {
+        // Paystack has no "cancel at period end" — disabling stops future
+        // charges immediately. atPeriodEnd is accepted for interface parity but
+        // not honored here.
         await this.request(`/subscription/disable`, {
             method: "POST",
             body: JSON.stringify({ code: providerSubscriptionId }),
         });
     }
 
-    async pauseSubscription(providerSubscriptionId: string): Promise<void> {
-        await this.request(`/subscription/disable`, {
-            method: "POST",
-            body: JSON.stringify({ code: providerSubscriptionId }),
-        });
+    // Paystack has no native "pause": disabling a subscription is how you
+    // cancel it, so aliasing pause -> disable is indistinguishable from cancel
+    // and would mislead callers. Surface it as unsupported until there's a
+    // real pause/resume model, rather than silently cancelling.
+    async pauseSubscription(_providerSubscriptionId: string): Promise<void> {
+        throw new PaystackProviderError(
+            "Paystack does not support pausing a subscription",
+        );
     }
 
-    async resumeSubscription(providerSubscriptionId: string): Promise<void> {
-        await this.request(`/subscription/enable`, {
-            method: "POST",
-            body: JSON.stringify({ code: providerSubscriptionId }),
-        });
+    async resumeSubscription(_providerSubscriptionId: string): Promise<void> {
+        throw new PaystackProviderError(
+            "Paystack does not support resuming a subscription",
+        );
     }
 
     async verifyWebhook(payload: string, signature: string): Promise<VerifiedWebhookEvent> {
@@ -203,21 +212,44 @@ export class PayStackProvider implements PaymentProvider {
             eventData.reference ??
             createHash("sha256").update(payload).digest("hex");
 
+        // Prefer the subscription code; fall back to the (unique) transaction
+        // reference so the local subscription row is never keyed on an empty
+        // string (which would collide across customers) and stays findable.
+        const resolvedSubscriptionId =
+            subscriptionId || eventData.reference || providerEventId;
+
+        // NOTE: our Paystack checkout currently initializes a one-time
+        // transaction (not a Plan-based subscription), so charge.success is the
+        // activation signal. Full recurring linkage (matching renewals back to
+        // the created row by subscription code) needs the Paystack Plans
+        // redesign tracked in #16.
         switch (event.event) {
             case "charge.success":
                 return {
                     type: "checkout.completed",
                     providerEventId,
-                    providerSubscriptionId: subscriptionId,
+                    providerSubscriptionId: resolvedSubscriptionId,
                     providerCustomerId: customerId,
                     metadata: this.normalizeMetadata(eventData.metadata),
                     raw: event,
                 };
+            // A successful recurring invoice is a renewal.
+            case "invoice.update":
+                return {
+                    type: "subscription.renewed",
+                    providerEventId,
+                    providerSubscriptionId: resolvedSubscriptionId,
+                    providerCustomerId: customerId,
+                    metadata: this.normalizeMetadata(eventData.metadata),
+                    raw: event,
+                };
+            // Disabled or will-not-renew both end the subscription.
             case "subscription.disable":
+            case "subscription.not_renew":
                 return {
                     type: "subscription.cancelled",
                     providerEventId,
-                    providerSubscriptionId: subscriptionId,
+                    providerSubscriptionId: resolvedSubscriptionId,
                     providerCustomerId: customerId,
                     metadata: this.normalizeMetadata(eventData.metadata),
                     raw: event,
@@ -226,21 +258,14 @@ export class PayStackProvider implements PaymentProvider {
                 return {
                     type: "payment.failed",
                     providerEventId,
-                    providerSubscriptionId: subscriptionId,
+                    providerSubscriptionId: resolvedSubscriptionId,
                     providerCustomerId: customerId,
                     metadata: this.normalizeMetadata(eventData.metadata),
                     raw: event,
                 };
-            case "subscription.create":
-            case "subscription.not_renewed":
-                return {
-                    type: "subscription.renewed",
-                    providerEventId,
-                    providerSubscriptionId: subscriptionId,
-                    providerCustomerId: customerId,
-                    metadata: this.normalizeMetadata(eventData.metadata),
-                    raw: event,
-                };
+            // subscription.create (initial creation) is intentionally unhandled:
+            // activation is already recorded via charge.success, so acting on it
+            // would double-insert. Revisit with the Plans redesign (#16).
             default:
                 throw new UnhandledPaystackEventError(event.event ?? "unknown");
         }

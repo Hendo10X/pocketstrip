@@ -14,6 +14,9 @@ import projectsRoute from "./routes/projects";
 import plansRoute from "./routes/plans";
 import customersRoute from "./routes/customers";
 import checkoutRoute from "./routes/checkout";
+import subscriptionsRoute from "./routes/subscriptions";
+import analyticsRoute from "./routes/analytics";
+import invoicesRoute from "./routes/invoices";
 import stripeWebhookRoute from "./routes/stripe-webhook";
 import paystackWebhookRoute from "./routes/paystack-webhook";
 import apiKeysRoute from "./routes/api-keys";
@@ -69,7 +72,7 @@ export class PocketStripServer {
                     </head>
                     <body>
                         <redoc spec-url='/openapi.json'></redoc>
-                        <script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>
+                        <script src="https://cdn.jsdelivr.net/npm/redoc@2.1.5/bundles/redoc.standalone.js"></script>
                     </body>
                 </html>
             `);
@@ -222,68 +225,6 @@ export class PocketStripServer {
 
             return c.json({ customer, subscriptions: customerSubscriptions });
         });
-
-        // PocketStrip health status
-        this.app.get("/healthz", (c) => c.json({ status: "PocketStrip Service is healthy!" }));
-
-        // validate API key
-        this.app.get("/test-api-key", requireApiKey, (c) => {
-            const project = c.get("project");
-            return c.json({
-                message: "API key is valid!",
-                project: project.name,
-            });
-        });
-
-        // portal
-        this.app.get("/portal/:token", async (c) => {
-            const rawToken = c.req.param("token");
-            const tokenHash = createHash("sha256").update(rawToken).digest("hex");
-
-            const [session] = await db
-                .update(portalSessions)
-                .set({ usedAt: new Date() })
-                .where(
-                    and(
-                        eq(portalSessions.tokenHash, tokenHash),
-                        isNull(portalSessions.usedAt),
-                        gt(portalSessions.expiresAt, new Date()),
-                    ),
-                )
-                .returning();
-
-            if (!session) {
-                return c.json(
-                    { error: "This link is invalid, expired, or already used" },
-                    401,
-                );
-            };
-
-            const customer = await db.query.customers.findFirst({
-                where: eq(customers.id, session.customerId),
-            });
-
-            if (!customer) {
-                return c.json({ error: "Customer not found" }, 404);
-            };
-
-            const customerSubscriptions = await db
-                .select({
-                    id: subscriptions.id,
-                    status: subscriptions.status,
-                    currentPeriodEnd: subscriptions.currentPeriodEnd,
-                    cancelAt: subscriptions.cancelAt,
-                    planName: plans.name,
-                    price: plans.price,
-                    currency: plans.currency,
-                    billingInterval: plans.billingInterval,
-                })
-                .from(subscriptions)
-                .innerJoin(plans, eq(subscriptions.planId, plans.id))
-                .where(eq(subscriptions.customerId, customer.id));
-
-            return c.json({ customer, subscriptions: customerSubscriptions });
-        });
     };
 
     public registerRoutes() {
@@ -291,6 +232,9 @@ export class PocketStripServer {
         this.app.route("/projects", plansRoute);
         this.app.route("/projects", customersRoute);
         this.app.route("/projects", checkoutRoute);
+        this.app.route("/projects", subscriptionsRoute);
+        this.app.route("/projects", analyticsRoute);
+        this.app.route("/projects", invoicesRoute);
         this.app.route("/projects", apiKeysRoute);
         this.app.route("/webhooks", stripeWebhookRoute);
         this.app.route("/webhooks", paystackWebhookRoute);

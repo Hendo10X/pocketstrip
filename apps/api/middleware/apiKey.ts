@@ -2,6 +2,7 @@ import type { MiddlewareHandler } from "hono";
 import { db, apiKeys, projects } from "@pocketstrip/db";
 import { createHash } from "crypto";
 import { eq } from "drizzle-orm";
+import { safeEqualHex } from "../lib/secure-compare";
 import type { Variables } from "../types";
 
 export const requireApiKey: MiddlewareHandler<{
@@ -29,7 +30,7 @@ export const requireApiKey: MiddlewareHandler<{
 
     const providedHash = createHash("sha256").update(providedKey).digest("hex");
 
-    if (providedHash !== candidate.keyHash) {
+    if (!safeEqualHex(providedHash, candidate.keyHash)) {
         return c.json({ error: "Invalid API key" }, 401);
     }
 

@@ -4,6 +4,7 @@ import type {
     CreateCheckoutInput,
     CheckoutResult,
     VerifiedWebhookEvent,
+    CancelOptions,
 } from "../provider";
 
 export class UnhandledStripeEventError extends Error {
@@ -205,7 +206,16 @@ export class StripeProvider implements PaymentProvider {
         }
     }
 
-    async cancelSubscription(providerSubscriptionId: string): Promise<void> {
+    async cancelSubscription(
+        providerSubscriptionId: string,
+        options?: CancelOptions,
+    ): Promise<void> {
+        if (options?.atPeriodEnd) {
+            await this.stripe.subscriptions.update(providerSubscriptionId, {
+                cancel_at_period_end: true,
+            });
+            return;
+        }
         await this.stripe.subscriptions.cancel(providerSubscriptionId);
     }
 }

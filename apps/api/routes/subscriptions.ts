@@ -3,6 +3,7 @@ import { db, subscriptions, plans, customers } from "@pocketstrip/db";
 import { eq, and } from "drizzle-orm";
 import type { Variables } from "../types";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
+import { getProviderForProject } from "../lib/provider";
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -59,5 +60,49 @@ app.post("/:projectId/subscriptions", requireProjectAccess, async (c) => {
 
     return c.json({ subscription }, 201);
 });
+
+// Cancel a subscription, immediately or at the end of the current period.
+app.post(
+    "/:projectId/subscriptions/:id/cancel",
+    requireProjectAccess,
+    async (c) => {
+        const projectId = c.req.param("projectId");
+        const id = c.req.param("id");
+        const body = await c.req.json().catch(() => ({}));
+        const atPeriodEnd = body?.atPeriodEnd === true;
+
+        const subscription = await db.query.subscriptions.findFirst({
+            where: and(
+                eq(subscriptions.id, id),
+                eq(subscriptions.projectId, projectId),
+            ),
+        });
+        if (!subscription) {
+            return c.json({ error: "Subscription not found" }, 404);
+        }
+
+        // Tell the provider to cancel (now or at period end) for
+        // provider-backed subscriptions; manual subs have no provider id.
+        if (subscription.providerSubscriptionId) {
+            const provider = await getProviderForProject(projectId);
+            await provider.cancelSubscription(
+                subscription.providerSubscriptionId,
+                { atPeriodEnd },
+            );
+        }
+
+        const [updated] = await db
+            .update(subscriptions)
+            .set(
+                atPeriodEnd
+                    ? { cancelAt: subscription.currentPeriodEnd }
+                    : { status: "cancelled", cancelAt: new Date() },
+            )
+            .where(eq(subscriptions.id, subscription.id))
+            .returning();
+
+        return c.json({ subscription: updated });
+    },
+);
 
 export default app;
