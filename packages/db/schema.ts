@@ -8,6 +8,7 @@ import {
     uniqueIndex,
     index,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { user } from "./auth-schema";
 
 export const projects = pgTable("projects", {
@@ -105,6 +106,11 @@ export const subscriptions = pgTable(
             table.projectId,
             table.status,
         ),
+        // One local subscription per provider subscription. Partial so multiple
+        // manually-created subs (null providerSubscriptionId) remain allowed.
+        providerSubUnique: uniqueIndex("subscriptions_provider_sub_unique")
+            .on(table.providerSubscriptionId)
+            .where(sql`${table.providerSubscriptionId} is not null`),
     }),
 );
 
@@ -152,3 +158,15 @@ export const projectProviders = pgTable(
         ),
     }),
 );
+
+// Idempotency ledger for provider webhooks. We insert the provider's event id
+// before processing; a duplicate delivery hits the unique constraint and is
+// skipped, so retried events never double-process (e.g. duplicate subscriptions).
+export const webhookEvents = pgTable("webhook_events", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    provider: text("provider").notNull(), // "stripe" | "paystack" | ...
+    providerEventId: text("provider_event_id").notNull().unique(),
+    type: text("type").notNull(), // normalized internal event type
+    receivedAt: timestamp("received_at").notNull().defaultNow(),
+    payload: text("payload"), // raw event JSON, for debugging/replay
+});

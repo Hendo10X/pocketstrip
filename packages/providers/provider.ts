@@ -44,6 +44,8 @@ export interface VerifiedWebhookEvent {
         | "subscription.renewed"
         | "subscription.cancelled"
         | "payment.failed";
+    // Provider's unique event id, used for idempotent processing.
+    providerEventId: string;
     providerSubscriptionId: string;
     providerCustomerId: string;
     metadata: Record<string, string>;

@@ -132,6 +132,7 @@ export class StripeProvider implements PaymentProvider {
                 const session = event.data.object as Stripe.Checkout.Session;
                 return {
                     type: "checkout.completed",
+                    providerEventId: event.id,
                     providerSubscriptionId: session.subscription as string,
                     providerCustomerId: session.customer as string,
                     metadata: session.metadata ?? {},
@@ -156,6 +157,7 @@ export class StripeProvider implements PaymentProvider {
 
                 return {
                     type: "subscription.renewed",
+                    providerEventId: event.id,
                     providerSubscriptionId: subscriptionId as string,
                     providerCustomerId: invoice.customer as string,
                     metadata: invoice.metadata ?? {},
@@ -167,6 +169,7 @@ export class StripeProvider implements PaymentProvider {
                 const sub = event.data.object as Stripe.Subscription;
                 return {
                     type: "subscription.cancelled",
+                    providerEventId: event.id,
                     providerSubscriptionId: sub.id,
                     providerCustomerId: sub.customer as string,
                     metadata: sub.metadata ?? {},
@@ -189,6 +192,7 @@ export class StripeProvider implements PaymentProvider {
 
                 return {
                     type: "payment.failed",
+                    providerEventId: event.id,
                     providerSubscriptionId: subscriptionId as string,
                     providerCustomerId: invoice.customer as string,
                     metadata: invoice.metadata ?? {},

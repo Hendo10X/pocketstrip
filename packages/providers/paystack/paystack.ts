@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import type {
     PaymentProvider,
     CreateCheckoutInput,
@@ -196,10 +196,18 @@ export class PayStackProvider implements PaymentProvider {
                   ? eventData.subscription
                   : "";
 
+        // Paystack has no top-level event id; use the transaction reference,
+        // falling back to a hash of the payload so identical redeliveries
+        // dedupe consistently in the webhook_events ledger.
+        const providerEventId =
+            eventData.reference ??
+            createHash("sha256").update(payload).digest("hex");
+
         switch (event.event) {
             case "charge.success":
                 return {
                     type: "checkout.completed",
+                    providerEventId,
                     providerSubscriptionId: subscriptionId,
                     providerCustomerId: customerId,
                     metadata: this.normalizeMetadata(eventData.metadata),
@@ -208,6 +216,7 @@ export class PayStackProvider implements PaymentProvider {
             case "subscription.disable":
                 return {
                     type: "subscription.cancelled",
+                    providerEventId,
                     providerSubscriptionId: subscriptionId,
                     providerCustomerId: customerId,
                     metadata: this.normalizeMetadata(eventData.metadata),
@@ -216,6 +225,7 @@ export class PayStackProvider implements PaymentProvider {
             case "invoice.payment_failed":
                 return {
                     type: "payment.failed",
+                    providerEventId,
                     providerSubscriptionId: subscriptionId,
                     providerCustomerId: customerId,
                     metadata: this.normalizeMetadata(eventData.metadata),
@@ -225,6 +235,7 @@ export class PayStackProvider implements PaymentProvider {
             case "subscription.not_renewed":
                 return {
                     type: "subscription.renewed",
+                    providerEventId,
                     providerSubscriptionId: subscriptionId,
                     providerCustomerId: customerId,
                     metadata: this.normalizeMetadata(eventData.metadata),
