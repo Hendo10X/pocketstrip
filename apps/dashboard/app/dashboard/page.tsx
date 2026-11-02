@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "motion/react";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { apiFetch } from "@/lib/api";
 import { buttonVariants } from "@/components/ui/button";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     Dialog,
     DialogContent,
@@ -40,28 +44,43 @@ export default function DashboardOverviewPage() {
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["projects"] });
+            toast.success("Project created");
             setName("");
             setOpen(false);
         },
+        onError: (err: Error) => toast.error(err.message),
     });
 
     const projects: ProjectRow[] = data?.projects ?? [];
 
     return (
-        <div className="max-w-[1600px]">
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-[24px] font-medium leading-8">Overview</h1>
+        <div className="mx-auto w-full max-w-5xl">
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b pb-6">
+                <div>
+                    <p className="mb-2 font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+                        Workspace
+                    </p>
+                    <h1 className="font-display text-[34px] leading-[1.05] tracking-[-0.02em]">
+                        Projects
+                    </h1>
+                    <p className="mt-2 font-geist text-[13px] text-muted-foreground">
+                        Each project is an isolated billing environment with its own
+                        plans, customers and keys.
+                    </p>
+                </div>
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger
                         className={buttonVariants({
-                            className: "h-9 rounded-[8px] px-4 text-[13px]",
+                            className:
+                                "h-9 gap-1.5 rounded-none px-4 text-[13px]",
                         })}
                     >
+                        <HugeiconsIcon icon={PlusSignIcon} size={15} />
                         New project
                     </DialogTrigger>
-                    <DialogContent className="max-w-120 rounded-[12px]">
+                    <DialogContent className="max-w-100 rounded-2xl">
                         <DialogHeader>
-                            <DialogTitle className="text-[18px] font-medium">
+                            <DialogTitle className="font-display text-[22px] font-normal leading-tight">
                                 Create project
                             </DialogTitle>
                         </DialogHeader>
@@ -70,7 +89,7 @@ export default function DashboardOverviewPage() {
                                 e.preventDefault();
                                 createProject.mutate(name);
                             }}
-                            className="space-y-4"
+                            className="mt-2 space-y-4"
                         >
                             <div className="space-y-2">
                                 <Label htmlFor="name" className="text-[12px]">
@@ -78,25 +97,22 @@ export default function DashboardOverviewPage() {
                                 </Label>
                                 <Input
                                     id="name"
-                                    className="h-9 rounded-[8px] text-[13px]"
+                                    placeholder="Acme Inc."
+                                    className="h-9 rounded-none text-[13px]"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     required
+                                    autoFocus
                                 />
                             </div>
-                            {createProject.isError && (
-                                <p className="text-[12px] text-red-600">
-                                    {createProject.error.message}
-                                </p>
-                            )}
                             <Button
                                 type="submit"
-                                className="h-9 w-full rounded-[8px] text-[13px]"
+                                className="h-9 w-full rounded-none text-[13px]"
                                 disabled={createProject.isPending}
                             >
                                 {createProject.isPending
-                                    ? "Creating..."
-                                    : "Create"}
+                                    ? "Creating…"
+                                    : "Create project"}
                             </Button>
                         </form>
                     </DialogContent>
@@ -104,39 +120,70 @@ export default function DashboardOverviewPage() {
             </div>
 
             {isLoading ? (
-                <p className="text-[13px] leading-5.5 text-muted-foreground">
-                    Loading...
-                </p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-40" />
+                    ))}
+                </div>
             ) : projects.length === 0 ? (
-                <Card className="rounded-[10px] border border-neutral-200 p-5 text-center dark:border-neutral-800">
-                    <p className="text-[15px] font-medium leading-6">
-                        No projects yet
-                    </p>
-                    <p className="mt-1 text-[13px] leading-5.5 text-muted-foreground">
+                <div className="flex flex-col items-center border bg-card py-16 text-center">
+                    <p className="text-[15px] font-medium">No projects yet</p>
+                    <p className="mt-1 max-w-xs font-geist text-[13px] text-muted-foreground">
                         Create your first project to start accepting
                         subscriptions.
                     </p>
-                </Card>
+                    <Button
+                        onClick={() => setOpen(true)}
+                        className="mt-5 h-9 gap-1.5 rounded-none px-4 text-[13px]"
+                    >
+                        <HugeiconsIcon icon={PlusSignIcon} size={15} />
+                        New project
+                    </Button>
+                </div>
             ) : (
-                <div className="grid grid-cols-3 gap-6">
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                        visible: { transition: { staggerChildren: 0.05 } },
+                    }}
+                    className="grid gap-px border bg-border sm:grid-cols-2 lg:grid-cols-3"
+                >
                     {projects.map(({ project, role }) => (
-                        <Link
+                        <motion.div
                             key={project.id}
-                            href={`/dashboard/${project.slug}`}
+                            variants={{
+                                hidden: { opacity: 0, y: 10 },
+                                visible: { opacity: 1, y: 0 },
+                            }}
+                            transition={{ duration: 0.3, ease: [0.2, 0, 0, 1] }}
                         >
-                            <Card className="rounded-[10px] border border-neutral-200 p-5 transition-colors hover:bg-accent dark:border-neutral-800">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[15px] font-medium leading-6">
+                            <Link
+                                href={`/dashboard/${project.slug}`}
+                                className="group flex h-full min-h-40 flex-col justify-between bg-background p-6 transition-colors duration-150 hover:bg-card"
+                            >
+                                <div className="min-w-0">
+                                    <p className="truncate font-display text-[24px] leading-tight">
                                         {project.name}
-                                    </span>
-                                    <span className="text-[12px] leading-5 uppercase text-muted-foreground">
+                                    </p>
+                                    <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground">
+                                        {project.slug}
+                                    </p>
+                                </div>
+                                <div className="mt-8 flex items-center justify-between">
+                                    <span className="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
                                         {role}
                                     </span>
+                                    <HugeiconsIcon
+                                        icon={ArrowRight01Icon}
+                                        size={16}
+                                        className="text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5"
+                                    />
                                 </div>
-                            </Card>
-                        </Link>
+                            </Link>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             )}
         </div>
     );

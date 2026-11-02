@@ -4,6 +4,7 @@ import type {
     CreateCheckoutInput,
     CheckoutResult,
     VerifiedWebhookEvent,
+    CancelOptions,
 } from "../provider";
 
 export class UnhandledStripeEventError extends Error {
@@ -19,6 +20,11 @@ export class StripeProvider implements PaymentProvider {
     constructor(secretKey: string, webhookSecret: string) {
         this.stripe = new Stripe(secretKey);
         this.webhookSecret = webhookSecret;
+    }
+
+    async verifyCredentials(): Promise<void> {
+        // Read-only call that fails fast on an invalid or revoked key.
+        await this.stripe.balance.retrieve();
     }
 
     async createCustomer(input: any): Promise<any> {
@@ -155,6 +161,15 @@ export class StripeProvider implements PaymentProvider {
                     );
                 }
 
+                // The first invoice of a new subscription is already handled by
+                // checkout.session.completed. Treating it as a renewal would push
+                // the period end forward a cycle and record a duplicate invoice.
+                if (invoice.billing_reason === "subscription_create") {
+                    throw new UnhandledStripeEventError(
+                        "invoice.paid (initial invoice)",
+                    );
+                }
+
                 return {
                     type: "subscription.renewed",
                     providerEventId: event.id,
@@ -205,7 +220,16 @@ export class StripeProvider implements PaymentProvider {
         }
     }
 
-    async cancelSubscription(providerSubscriptionId: string): Promise<void> {
+    async cancelSubscription(
+        providerSubscriptionId: string,
+        options?: CancelOptions,
+    ): Promise<void> {
+        if (options?.atPeriodEnd) {
+            await this.stripe.subscriptions.update(providerSubscriptionId, {
+                cancel_at_period_end: true,
+            });
+            return;
+        }
         await this.stripe.subscriptions.cancel(providerSubscriptionId);
     }
 }

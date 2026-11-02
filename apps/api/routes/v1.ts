@@ -1,10 +1,18 @@
 import { Hono } from "hono";
-import { db, customers, plans, portalSessions } from "@pocketstrip/db";
+import {
+    db,
+    customers,
+    plans,
+    subscriptions,
+    planFeatures,
+} from "@pocketstrip/db";
 import { requireApiKey } from "../middleware/apiKey";
 import { getProviderForProject } from "../lib/provider";
-import { eq, and, isNull, gt } from "drizzle-orm";
-import { randomBytes, createHash } from "crypto";
+import { createPortalLink } from "../lib/portal";
+import { eq, and, inArray } from "drizzle-orm";
 import type { Variables } from "../types";
+
+const ACTIVE_STATUSES = ["active", "trialing"] as const;
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -92,17 +100,110 @@ app.post("/customers/:customerId/portal-link", requireApiKey, async (c) => {
     });
     if (!customer) return c.json({ error: "Customer not found" }, 404);
 
-    const rawToken = randomBytes(32).toString("hex");
-    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const { portalUrl } = await createPortalLink(customer.id);
+    return c.json({ portalUrl });
+});
 
-    await db
-        .insert(portalSessions)
-        .values({ customerId: customer.id, tokenHash, expiresAt });
+// Does this customer have access to a given feature? Access = an active or
+// trialing subscription whose plan grants the feature key.
+app.get("/customers/:customerId/access", requireApiKey, async (c) => {
+    const project = c.get("project");
+    const customerId = c.req.param("customerId");
+    const feature = c.req.query("feature");
+
+    if (!feature) {
+        return c.json({ error: "feature query param is required" }, 400);
+    }
+
+    const customer = await db.query.customers.findFirst({
+        where: and(
+            eq(customers.id, customerId),
+            eq(customers.projectId, project.id),
+        ),
+    });
+    if (!customer) return c.json({ error: "Customer not found" }, 404);
+
+    const rows = await db
+        .select({
+            subId: subscriptions.id,
+            status: subscriptions.status,
+            featureKey: planFeatures.key,
+            featureLimit: planFeatures.limit,
+        })
+        .from(subscriptions)
+        .leftJoin(
+            planFeatures,
+            and(
+                eq(planFeatures.planId, subscriptions.planId),
+                eq(planFeatures.key, feature),
+            ),
+        )
+        .where(
+            and(
+                eq(subscriptions.customerId, customer.id),
+                inArray(subscriptions.status, [...ACTIVE_STATUSES]),
+            ),
+        );
+
+    const first = rows[0];
+    if (!first) {
+        return c.json({
+            hasAccess: false,
+            reason: "no_active_subscription",
+            limit: null,
+            subscription: null,
+        });
+    }
+
+    const granted = rows.find((r) => r.featureKey !== null);
+    if (!granted) {
+        return c.json({
+            hasAccess: false,
+            reason: "feature_not_in_plan",
+            limit: null,
+            subscription: { id: first.subId, status: first.status },
+        });
+    }
 
     return c.json({
-        portalUrl: `${process.env.DASHBOARD_URL}/portal/${rawToken}`,
+        hasAccess: true,
+        reason: granted.status === "trialing" ? "on_trial" : "active_subscription",
+        limit: granted.featureLimit ?? null,
+        subscription: { id: granted.subId, status: granted.status },
     });
+});
+
+// The full resolved feature set for a customer, for app-side caching.
+app.get("/customers/:customerId/entitlements", requireApiKey, async (c) => {
+    const project = c.get("project");
+    const customerId = c.req.param("customerId");
+
+    const customer = await db.query.customers.findFirst({
+        where: and(
+            eq(customers.id, customerId),
+            eq(customers.projectId, project.id),
+        ),
+    });
+    if (!customer) return c.json({ error: "Customer not found" }, 404);
+
+    const rows = await db
+        .select({ key: planFeatures.key, limit: planFeatures.limit })
+        .from(subscriptions)
+        .innerJoin(planFeatures, eq(planFeatures.planId, subscriptions.planId))
+        .where(
+            and(
+                eq(subscriptions.customerId, customer.id),
+                inArray(subscriptions.status, [...ACTIVE_STATUSES]),
+            ),
+        );
+
+    const byKey = new Map<string, number | null>();
+    for (const r of rows) {
+        if (!byKey.has(r.key)) byKey.set(r.key, r.limit ?? null);
+    }
+    const features = Array.from(byKey, ([key, limit]) => ({ key, limit }));
+
+    return c.json({ features });
 });
 
 export default app;

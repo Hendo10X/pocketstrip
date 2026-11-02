@@ -2,16 +2,30 @@ import { createCipheriv, createDecipheriv, randomBytes, createHash } from "node:
 
 const MASTER_KEY_ENV = process.env.PROVIDERS_MASTER_KEY ?? "";
 
+// Require a high-entropy master key. We derive the AES key with SHA-256 (fine
+// for a strong, random secret), so we reject short/guessable passphrases rather
+// than silently stretching a weak one. Generate with: openssl rand -base64 32
+const MIN_MASTER_KEY_LENGTH = 32;
+
+function assertMasterKey(): void {
+    if (!MASTER_KEY_ENV) {
+        throw new Error("PROVIDERS_MASTER_KEY is not set");
+    }
+    if (MASTER_KEY_ENV.length < MIN_MASTER_KEY_LENGTH) {
+        throw new Error(
+            `PROVIDERS_MASTER_KEY must be at least ${MIN_MASTER_KEY_LENGTH} characters of high-entropy randomness (e.g. \`openssl rand -base64 32\`)`,
+        );
+    }
+}
+
 function getKey(): Buffer {
-    // Derive 32-byte key from master env var using SHA-256.
+    // Derive a 32-byte key from the master secret using SHA-256.
     return createHash("sha256").update(MASTER_KEY_ENV).digest();
 }
 
 // Format: base64(iv) + "." + base64(tag) + "." + base64(ciphertext)
 export function encryptSecret(plaintext: string): string {
-    if (!MASTER_KEY_ENV) {
-        throw new Error("PROVIDERS_MASTER_KEY is not set");
-    }
+    assertMasterKey();
 
     const iv = randomBytes(12);
     const key = getKey();
@@ -23,9 +37,7 @@ export function encryptSecret(plaintext: string): string {
 }
 
 export function decryptSecret(payload: string): string {
-    if (!MASTER_KEY_ENV) {
-        throw new Error("PROVIDERS_MASTER_KEY is not set");
-    }
+    assertMasterKey();
 
     const [ivB64, tagB64, cipherB64] = payload.split(".");
     if (!ivB64 || !tagB64 || !cipherB64) {

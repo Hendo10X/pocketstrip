@@ -9,7 +9,11 @@ export class Pocket {
 
     constructor(config: PocketConfig) {
         this.apiKey = config.apiKey;
-        this.baseUrl = config.baseUrl ?? "https://api.pocketstrip.dev";
+        // No hosted API yet — point baseUrl at your PocketStrip API deployment.
+        this.baseUrl = (config.baseUrl ?? "http://localhost:4000").replace(
+            /\/$/,
+            "",
+        );
     }
 
     private async request(path: string, options: RequestInit = {}) {
@@ -45,5 +49,29 @@ export class Pocket {
             method: "POST",
             body: JSON.stringify(input),
         });
+    }
+
+    // Does the customer have access to a feature?
+    access(
+        customerId: string,
+        feature: string,
+    ): Promise<{
+        hasAccess: boolean;
+        reason: string;
+        limit: number | null;
+        subscription: { id: string; status: string } | null;
+    }> {
+        return this.request(
+            `/v1/customers/${encodeURIComponent(customerId)}/access?feature=${encodeURIComponent(feature)}`,
+        );
+    }
+
+    // The customer's full resolved feature set.
+    entitlements(
+        customerId: string,
+    ): Promise<{ features: { key: string; limit: number | null }[] }> {
+        return this.request(
+            `/v1/customers/${encodeURIComponent(customerId)}/entitlements`,
+        );
     }
 }
