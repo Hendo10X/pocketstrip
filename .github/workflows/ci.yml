@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun run test
+
+      - name: Build dashboard
+        working-directory: apps/dashboard
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000
+          DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+          BETTER_AUTH_SECRET: ci-placeholder-secret-not-used-at-runtime
+          BETTER_AUTH_URL: http://localhost:3000
+          DASHBOARD_URL: http://localhost:3000
+        run: bun run build

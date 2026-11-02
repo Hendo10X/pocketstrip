@@ -22,6 +22,11 @@ export class StripeProvider implements PaymentProvider {
         this.webhookSecret = webhookSecret;
     }
 
+    async verifyCredentials(): Promise<void> {
+        // Read-only call that fails fast on an invalid or revoked key.
+        await this.stripe.balance.retrieve();
+    }
+
     async createCustomer(input: any): Promise<any> {
         const params: Stripe.CustomerCreateParams = {
             ...(input?.email ? { email: input.email } : {}),
@@ -153,6 +158,15 @@ export class StripeProvider implements PaymentProvider {
                 if (!subscriptionId) {
                     throw new UnhandledStripeEventError(
                         "invoice.paid (not subscription-related)",
+                    );
+                }
+
+                // The first invoice of a new subscription is already handled by
+                // checkout.session.completed. Treating it as a renewal would push
+                // the period end forward a cycle and record a duplicate invoice.
+                if (invoice.billing_reason === "subscription_create") {
+                    throw new UnhandledStripeEventError(
+                        "invoice.paid (initial invoice)",
                     );
                 }
 

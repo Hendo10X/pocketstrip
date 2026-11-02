@@ -17,6 +17,7 @@ import checkoutRoute from "./routes/checkout";
 import subscriptionsRoute from "./routes/subscriptions";
 import analyticsRoute from "./routes/analytics";
 import invoicesRoute from "./routes/invoices";
+import providersRoute from "./routes/providers";
 import stripeWebhookRoute from "./routes/stripe-webhook";
 import paystackWebhookRoute from "./routes/paystack-webhook";
 import apiKeysRoute from "./routes/api-keys";
@@ -235,6 +236,7 @@ export class PocketStripServer {
         this.app.route("/projects", subscriptionsRoute);
         this.app.route("/projects", analyticsRoute);
         this.app.route("/projects", invoicesRoute);
+        this.app.route("/projects", providersRoute);
         this.app.route("/projects", apiKeysRoute);
         this.app.route("/webhooks", stripeWebhookRoute);
         this.app.route("/webhooks", paystackWebhookRoute);

@@ -3,17 +3,16 @@ import {
     db,
     customers,
     plans,
-    portalSessions,
     subscriptions,
     planFeatures,
 } from "@pocketstrip/db";
 import { requireApiKey } from "../middleware/apiKey";
 import { getProviderForProject } from "../lib/provider";
-import { eq, and, isNull, gt, inArray } from "drizzle-orm";
+import { createPortalLink } from "../lib/portal";
+import { eq, and, inArray } from "drizzle-orm";
+import type { Variables } from "../types";
 
 const ACTIVE_STATUSES = ["active", "trialing"] as const;
-import { randomBytes, createHash } from "crypto";
-import type { Variables } from "../types";
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -101,17 +100,8 @@ app.post("/customers/:customerId/portal-link", requireApiKey, async (c) => {
     });
     if (!customer) return c.json({ error: "Customer not found" }, 404);
 
-    const rawToken = randomBytes(32).toString("hex");
-    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-
-    await db
-        .insert(portalSessions)
-        .values({ customerId: customer.id, tokenHash, expiresAt });
-
-    return c.json({
-        portalUrl: `${process.env.DASHBOARD_URL}/portal/${rawToken}`,
-    });
+    const { portalUrl } = await createPortalLink(customer.id);
+    return c.json({ portalUrl });
 });
 
 // Does this customer have access to a given feature? Access = an active or

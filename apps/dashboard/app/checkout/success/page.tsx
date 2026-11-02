@@ -24,8 +24,8 @@ export default function CheckoutSuccessPage() {
                 You&apos;re all set
             </h1>
             <p className="mt-2 text-[13px] leading-5.5 text-muted-foreground">
-                Your subscription is active. A confirmation has been sent to
-                your email.
+                Your payment went through and your subscription is being
+                activated. You can close this tab.
             </p>
 
             <Button

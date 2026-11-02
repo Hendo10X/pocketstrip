@@ -102,19 +102,19 @@ export default function DashboardLayout({
                   label: "Plans",
                   href: `/dashboard/${slug}/plans`,
                   icon: CreditCardIcon,
-                  ready: false,
+                  ready: true,
               },
               {
                   label: "Customers",
                   href: `/dashboard/${slug}/customers`,
                   icon: UserMultipleIcon,
-                  ready: false,
+                  ready: true,
               },
               {
                   label: "Payments",
                   href: `/dashboard/${slug}/payments`,
                   icon: Invoice01Icon,
-                  ready: false,
+                  ready: true,
               },
           ]
         : [];
@@ -131,7 +131,7 @@ export default function DashboardLayout({
                   label: "Settings",
                   href: `/dashboard/${slug}/settings`,
                   icon: Settings01Icon,
-                  ready: false,
+                  ready: true,
               },
           ]
         : [];

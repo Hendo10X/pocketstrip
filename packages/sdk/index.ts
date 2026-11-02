@@ -9,7 +9,11 @@ export class Pocket {
 
     constructor(config: PocketConfig) {
         this.apiKey = config.apiKey;
-        this.baseUrl = config.baseUrl ?? "https://api.pocketstrip.dev";
+        // No hosted API yet — point baseUrl at your PocketStrip API deployment.
+        this.baseUrl = (config.baseUrl ?? "http://localhost:4000").replace(
+            /\/$/,
+            "",
+        );
     }
 
     private async request(path: string, options: RequestInit = {}) {

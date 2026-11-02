@@ -4,6 +4,8 @@
 // `any`, so the compiler keeps adapters interchangeable and correct.
 
 export interface PaymentProvider {
+    // Cheap authenticated call that throws if the credentials are invalid.
+    verifyCredentials(): Promise<void>;
     createCheckout(input: CreateCheckoutInput): Promise<CheckoutResult>;
     cancelSubscription(
         providerSubscriptionId: string,

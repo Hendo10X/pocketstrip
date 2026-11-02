@@ -89,6 +89,11 @@ export class PayStackProvider implements PaymentProvider {
         return body as T;
     }
 
+    async verifyCredentials(): Promise<void> {
+        // Read-only call that fails fast on an invalid secret key.
+        await this.request("/balance");
+    }
+
     async createCustomer(input: any): Promise<any> {
         return this.request<any>("/customer", {
             method: "POST",

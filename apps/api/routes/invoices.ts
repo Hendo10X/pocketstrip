@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { db, invoices } from "@pocketstrip/db";
-import { eq, and, desc } from "drizzle-orm";
+import { db, invoices, customers } from "@pocketstrip/db";
+import { eq, and, desc, getTableColumns } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
 import { requireMembership } from "../middleware/membership";
 import type { Variables } from "../types";
@@ -11,8 +11,13 @@ app.get("/:projectId/invoices", requireAuth, requireMembership, async (c) => {
     const projectId = c.req.param("projectId");
 
     const rows = await db
-        .select()
+        .select({
+            ...getTableColumns(invoices),
+            customerEmail: customers.email,
+            customerName: customers.name,
+        })
         .from(invoices)
+        .innerJoin(customers, eq(invoices.customerId, customers.id))
         .where(eq(invoices.projectId, projectId))
         .orderBy(desc(invoices.createdAt));
 

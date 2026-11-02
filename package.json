@@ -3,6 +3,16 @@
     "module": "index.ts",
     "type": "module",
     "private": true,
+    "scripts": {
+        "db:up": "docker compose up -d --wait postgres",
+        "db:down": "docker compose down",
+        "db:migrate": "cd packages/db && bun run db:migrate",
+        "dev:api": "cd apps/api && bun run dev",
+        "dev:dashboard": "cd apps/dashboard && bun run dev",
+        "stripe:listen": "stripe listen --forward-to localhost:4000/webhooks/stripe",
+        "typecheck": "tsc --noEmit -p apps/api && tsc --noEmit -p packages/db && tsc --noEmit -p packages/providers/stripe && tsc --noEmit -p packages/providers/paystack && tsc --noEmit -p packages/sdk && tsc --noEmit -p apps/dashboard",
+        "test": "bun test apps packages"
+    },
     "devDependencies": {
         "@types/bun": "latest"
     },

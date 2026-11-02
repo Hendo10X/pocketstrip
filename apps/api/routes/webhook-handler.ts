@@ -1,6 +1,6 @@
 import { db, subscriptions, plans, webhookEvents, invoices } from "@pocketstrip/db";
 import { eq } from "drizzle-orm";
-import { computeNextPeriodEnd } from "./subscriptions";
+import { computeNextPeriodEnd } from "../lib/billing";
 import type { VerifiedWebhookEvent } from "@pocketstrip/providers";
 
 async function findSubscriptionByProviderId(providerSubscriptionId: string) {

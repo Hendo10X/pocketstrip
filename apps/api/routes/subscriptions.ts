@@ -4,15 +4,10 @@ import { eq, and } from "drizzle-orm";
 import type { Variables } from "../types";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { getProviderForProject } from "../lib/provider";
+import { computeNextPeriodEnd } from "../lib/billing";
 
 const app = new Hono<{ Variables: Variables }>();
 
-export function computeNextPeriodEnd(from: Date, interval: string): Date {
-    const next = new Date(from);
-    if (interval === "month") next.setMonth(next.getMonth() + 1);
-    if (interval === "year") next.setFullYear(next.getFullYear() + 1);
-    return next;
-}
 
 app.post("/:projectId/subscriptions", requireProjectAccess, async (c) => {
     const projectId = c.req.param("projectId");

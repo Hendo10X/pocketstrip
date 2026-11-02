@@ -8,6 +8,26 @@ import {
     UnhandledPaystackEventError,
 } from "@pocketstrip/providers";
 
+export const SUPPORTED_PROVIDERS = ["stripe", "paystack"] as const;
+export type SupportedProvider = (typeof SUPPORTED_PROVIDERS)[number];
+
+// Build an adapter from plaintext credentials (e.g. to verify keys before
+// they are encrypted and saved).
+export function buildProvider(
+    provider: SupportedProvider,
+    secretKey: string,
+    webhookSecret = "",
+) {
+    return provider === "stripe"
+        ? new StripeProvider(secretKey, webhookSecret)
+        : new PayStackProvider(secretKey);
+}
+
+// Webhook signing secrets are stored encrypted, same as API keys.
+function decryptWebhookSecret(row: { webhookSecret: string | null }): string {
+    return row.webhookSecret ? decryptSecret(row.webhookSecret) : "";
+}
+
 export async function getProviderForProject(projectId: string) {
     // Choose the project's default provider, falling back to the first
     // configured one. A project can have several providers, so we must not
@@ -26,7 +46,7 @@ export async function getProviderForProject(projectId: string) {
 
     switch (row.provider) {
         case "stripe":
-            return new StripeProvider(secret, row.webhookSecret ?? "");
+            return new StripeProvider(secret, decryptWebhookSecret(row));
         case "paystack":
             // PayStackProvider constructor accepts (secretKey?, baseUrl?)
             return new PayStackProvider(secret);
@@ -49,7 +69,7 @@ export async function verifyWebhookForProvider(
         try {
             const secret = row.secretKeyEnc ? decryptSecret(row.secretKeyEnc) : "";
             if (providerName === "stripe") {
-                const prov = new StripeProvider(secret, row.webhookSecret ?? "");
+                const prov = new StripeProvider(secret, decryptWebhookSecret(row));
                 const event = await prov.verifyWebhook(payload, signature);
                 // attach projectId from config if missing in metadata
                 if (!event.metadata.projectId) {
