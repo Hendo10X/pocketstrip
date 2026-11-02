@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { formatMoney } from "@/lib/format";
+import { formatDate, formatMoney } from "@/lib/format";
+import { StatusPill } from "@/components/status-pill";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -26,6 +27,17 @@ type Analytics = {
     newSubscriptionsThisPeriod: number;
 };
 
+type Invoice = {
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    paidAt: string | null;
+    createdAt: string;
+    customerEmail: string;
+    customerName: string | null;
+};
+
 const EMPTY_ANALYTICS: Analytics = {
     mrr: 0,
     currency: "usd",
@@ -34,30 +46,6 @@ const EMPTY_ANALYTICS: Analytics = {
     totalCustomers: 0,
     newSubscriptionsThisPeriod: 0,
 };
-
-function Stat({
-    label,
-    value,
-    hint,
-}: {
-    label: string;
-    value: string | number;
-    hint?: string;
-}) {
-    return (
-        <div className="rounded-2xl bg-card p-5">
-            <p className="font-geist text-[12px] text-muted-foreground">{label}</p>
-            <p className="mt-2 text-[26px] leading-8 font-semibold tracking-tight tabular-nums">
-                {value}
-            </p>
-            {hint && (
-                <p className="mt-1 font-geist text-[12px] text-muted-foreground">
-                    {hint}
-                </p>
-            )}
-        </div>
-    );
-}
 
 export default async function ProjectOverviewPage({
     params,
@@ -75,8 +63,8 @@ export default async function ProjectOverviewPage({
 
     if (!projectData) {
         return (
-            <div className="mx-auto w-full max-w-5xl">
-                <div className="flex flex-col items-center rounded-2xl bg-card py-16 text-center">
+            <div className="mx-auto w-full max-w-6xl">
+                <div className="flex flex-col items-center border bg-card py-16 text-center">
                     <p className="text-[15px] font-medium">Project not found</p>
                     <p className="mt-1 font-geist text-[13px] text-muted-foreground">
                         It may have been deleted, or you don&apos;t have access.
@@ -88,7 +76,7 @@ export default async function ProjectOverviewPage({
 
     const { id: projectId, name } = projectData.project;
 
-    const [analytics, providers, plans, apiKeys] = await Promise.all([
+    const [analytics, providers, plans, apiKeys, invoices] = await Promise.all([
         get<Analytics>(`/projects/${projectId}/analytics`, cookie, EMPTY_ANALYTICS),
         get<{ providers: unknown[] }>(`/projects/${projectId}/providers`, cookie, {
             providers: [],
@@ -98,6 +86,9 @@ export default async function ProjectOverviewPage({
         }),
         get<{ apiKeys: unknown[] }>(`/projects/${projectId}/api-keys`, cookie, {
             apiKeys: [],
+        }),
+        get<{ invoices: Invoice[] }>(`/projects/${projectId}/invoices`, cookie, {
+            invoices: [],
         }),
     ]);
 
@@ -124,7 +115,7 @@ export default async function ProjectOverviewPage({
             done:
                 analytics.activeSubscriptions + analytics.trialingSubscriptions > 0,
             title: "Run a test checkout",
-            body: "Pay with card 4242 4242 4242 4242 and watch the subscription go live.",
+            body: "Pay with card 4242 4242 4242 4242 and watch it go live.",
             href: `/dashboard/${slug}/customers`,
         },
         {
@@ -135,82 +126,162 @@ export default async function ProjectOverviewPage({
         },
     ];
     const doneCount = steps.filter((s) => s.done).length;
+    const nextStep = steps.findIndex((s) => !s.done);
+    const showSetup = doneCount < steps.length;
+    const latest = invoices.invoices.slice(0, 6);
+
+    const spec = [
+        ["Active", analytics.activeSubscriptions],
+        ["On trial", analytics.trialingSubscriptions],
+        ["Customers", analytics.totalCustomers],
+        ["New this month", analytics.newSubscriptionsThisPeriod],
+    ] as const;
 
     return (
-        <div className="mx-auto w-full max-w-5xl">
-            <div className="mb-8">
-                <h1 className="text-[22px] font-semibold tracking-tight">{name}</h1>
-                <p className="mt-1 font-geist text-[13px] text-muted-foreground">
-                    Revenue, subscriptions, and setup at a glance.
-                </p>
-            </div>
+        <div className="mx-auto w-full max-w-6xl">
+            <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+                Overview
+            </p>
+            <h1 className="mt-2 font-display text-[40px] leading-[1.05] tracking-[-0.02em]">
+                {name}
+            </h1>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-                <Stat
-                    label="Monthly recurring revenue"
-                    value={formatMoney(analytics.mrr, analytics.currency)}
-                    hint="Yearly plans counted as price ÷ 12"
-                />
-                <Stat
-                    label="Active subscriptions"
-                    value={analytics.activeSubscriptions}
-                    hint={
-                        analytics.trialingSubscriptions > 0
-                            ? `+ ${analytics.trialingSubscriptions} on trial`
-                            : `${analytics.newSubscriptionsThisPeriod} new this month`
-                    }
-                />
-                <Stat label="Customers" value={analytics.totalCustomers} />
-            </div>
+            {/* Revenue + spec sheet */}
+            <section className="mt-10 grid border md:grid-cols-[1.4fr_1fr]">
+                <div className="border-b p-6 md:border-r md:border-b-0 md:p-8">
+                    <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+                        Monthly recurring revenue
+                    </p>
+                    <p className="mt-3 font-display text-[56px] leading-none tracking-[-0.03em] tabular-nums md:text-[72px]">
+                        {formatMoney(analytics.mrr, analytics.currency)}
+                    </p>
+                    <p className="mt-4 font-geist text-[12px] text-muted-foreground">
+                        Active subscriptions, normalised to a month — yearly plans
+                        count as price ÷ 12.
+                    </p>
+                </div>
+                <dl className="divide-y">
+                    {spec.map(([label, value]) => (
+                        <div
+                            key={label}
+                            className="flex items-baseline justify-between px-6 py-4"
+                        >
+                            <dt className="font-geist text-[13px] text-muted-foreground">
+                                {label}
+                            </dt>
+                            <dd className="font-display text-[26px] leading-none tabular-nums">
+                                {value}
+                            </dd>
+                        </div>
+                    ))}
+                </dl>
+            </section>
 
-            {doneCount < steps.length && (
-                <section className="mt-10">
-                    <div className="mb-3 flex items-center justify-between">
-                        <h2 className="text-[15px] font-medium">Getting started</h2>
-                        <span className="font-geist text-[12px] text-muted-foreground tabular-nums">
-                            {doneCount} of {steps.length} done
-                        </span>
+            <div
+                className={`mt-12 grid gap-12 ${showSetup ? "lg:grid-cols-[0.9fr_1.1fr]" : ""}`}
+            >
+                {/* Setup stepper */}
+                {showSetup && (
+                    <section>
+                        <div className="mb-6 flex items-baseline justify-between">
+                            <h2 className="font-display text-[24px] leading-none">
+                                Getting started
+                            </h2>
+                            <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+                                {doneCount}/{steps.length}
+                            </span>
+                        </div>
+                        <ol className="relative">
+                            <span
+                                className="absolute top-2 bottom-2 left-[5px] w-px bg-border"
+                                aria-hidden
+                            />
+                            {steps.map((step, i) => {
+                                const isNext = i === nextStep;
+                                return (
+                                    <li key={step.title} className="relative pb-6 pl-8 last:pb-0">
+                                        <span
+                                            className={`absolute top-1.5 left-0 h-[11px] w-[11px] border ${
+                                                step.done
+                                                    ? "border-foreground bg-foreground"
+                                                    : isNext
+                                                      ? "border-brand bg-brand"
+                                                      : "border-border bg-background"
+                                            }`}
+                                            aria-hidden
+                                        />
+                                        <Link href={step.href} className="group block">
+                                            <span
+                                                className={`block text-[14px] ${
+                                                    step.done
+                                                        ? "text-muted-foreground line-through"
+                                                        : isNext
+                                                          ? "font-medium text-foreground"
+                                                          : "text-foreground/70"
+                                                }`}
+                                            >
+                                                {step.title}
+                                                {isNext && (
+                                                    <span className="ml-2 font-mono text-[10px] tracking-wide text-muted-foreground uppercase transition-colors group-hover:text-foreground">
+                                                        Next →
+                                                    </span>
+                                                )}
+                                            </span>
+                                            {!step.done && (
+                                                <span className="mt-0.5 block font-geist text-[12px] text-muted-foreground">
+                                                    {step.body}
+                                                </span>
+                                            )}
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ol>
+                    </section>
+                )}
+
+                {/* Latest payments */}
+                <section>
+                    <div className="mb-6 flex items-baseline justify-between">
+                        <h2 className="font-display text-[24px] leading-none">
+                            Latest payments
+                        </h2>
+                        <Link
+                            href={`/dashboard/${slug}/payments`}
+                            className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase transition-colors hover:text-foreground"
+                        >
+                            View all
+                        </Link>
                     </div>
-                    <div className="divide-y overflow-hidden rounded-2xl bg-card">
-                        {steps.map((step, i) => (
-                            <Link
-                                key={step.title}
-                                href={step.href}
-                                className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
-                            >
-                                <span
-                                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
-                                        step.done
-                                            ? "bg-foreground text-background"
-                                            : "bg-muted text-muted-foreground"
-                                    }`}
+                    {latest.length === 0 ? (
+                        <div className="border border-dashed px-6 py-12 text-center font-geist text-[13px] text-muted-foreground">
+                            Payments appear here once a checkout completes.
+                        </div>
+                    ) : (
+                        <div className="divide-y border">
+                            {latest.map((invoice) => (
+                                <div
+                                    key={invoice.id}
+                                    className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3"
                                 >
-                                    {step.done ? "✓" : i + 1}
-                                </span>
-                                <span className="min-w-0 flex-1">
-                                    <span
-                                        className={`block text-[13px] font-medium ${
-                                            step.done
-                                                ? "text-muted-foreground line-through"
-                                                : ""
-                                        }`}
-                                    >
-                                        {step.title}
+                                    <div className="min-w-0">
+                                        <p className="truncate text-[13px] font-medium">
+                                            {invoice.customerName ?? invoice.customerEmail}
+                                        </p>
+                                        <p className="font-geist text-[11px] text-muted-foreground">
+                                            {formatDate(invoice.paidAt ?? invoice.createdAt)}
+                                        </p>
+                                    </div>
+                                    <StatusPill status={invoice.status} />
+                                    <span className="w-20 text-right text-[13px] tabular-nums">
+                                        {formatMoney(invoice.amount, invoice.currency)}
                                     </span>
-                                    <span className="block font-geist text-[12px] text-muted-foreground">
-                                        {step.body}
-                                    </span>
-                                </span>
-                                {!step.done && (
-                                    <span className="text-[12px] text-muted-foreground">
-                                        →
-                                    </span>
-                                )}
-                            </Link>
-                        ))}
-                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </section>
-            )}
+            </div>
         </div>
     );
 }

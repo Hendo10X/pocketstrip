@@ -51,7 +51,7 @@ function ActionButton(props: React.ComponentProps<typeof Button>) {
     return (
         <Button
             variant="ghost"
-            className="h-7 rounded-[6px] px-2 text-[12px]"
+            className="h-7 rounded-none px-2 text-[12px]"
             {...props}
         />
     );
@@ -164,7 +164,7 @@ export default function CustomersPage() {
     const addButton = (
         <Button
             onClick={() => setCreateOpen(true)}
-            className="h-9 gap-1.5 rounded-[8px] px-4 text-[13px]"
+            className="h-9 gap-1.5 rounded-none px-4 text-[13px]"
         >
             <HugeiconsIcon icon={PlusSignIcon} size={15} />
             New customer
@@ -191,7 +191,7 @@ export default function CustomersPage() {
                     action={addButton}
                 />
             ) : (
-                <div className="divide-y overflow-hidden rounded-2xl bg-card">
+                <div className="divide-y overflow-hidden border bg-card">
                     {customers.map((customer) => {
                         const sub = customer.subscription;
                         const isLive = !!sub && LIVE_STATUSES.includes(sub.status);
@@ -273,7 +273,7 @@ export default function CustomersPage() {
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                 <DialogContent className="max-w-100 rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-[16px] font-semibold">
+                        <DialogTitle className="font-display text-[22px] font-normal leading-tight">
                             Add customer
                         </DialogTitle>
                     </DialogHeader>
@@ -292,7 +292,7 @@ export default function CustomersPage() {
                                 id="customer-email"
                                 type="email"
                                 placeholder="ada@example.com"
-                                className="h-9 rounded-[8px] text-[13px]"
+                                className="h-9 rounded-none text-[13px]"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -309,14 +309,14 @@ export default function CustomersPage() {
                             <Input
                                 id="customer-name"
                                 placeholder="Ada Lovelace"
-                                className="h-9 rounded-[8px] text-[13px]"
+                                className="h-9 rounded-none text-[13px]"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                             />
                         </div>
                         <Button
                             type="submit"
-                            className="h-9 w-full rounded-[8px] text-[13px]"
+                            className="h-9 w-full rounded-none text-[13px]"
                             disabled={createCustomer.isPending}
                         >
                             {createCustomer.isPending ? "Adding…" : "Add customer"}
@@ -332,7 +332,7 @@ export default function CustomersPage() {
             >
                 <DialogContent className="max-w-100 rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-[16px] font-semibold">
+                        <DialogTitle className="font-display text-[22px] font-normal leading-tight">
                             Start checkout
                         </DialogTitle>
                         <DialogDescription className="font-geist text-[13px]">
@@ -383,7 +383,7 @@ export default function CustomersPage() {
                             </div>
                             <Button
                                 type="submit"
-                                className="h-9 w-full rounded-[8px] text-[13px]"
+                                className="h-9 w-full rounded-none text-[13px]"
                                 disabled={startCheckout.isPending || !planId}
                             >
                                 {startCheckout.isPending
@@ -402,7 +402,7 @@ export default function CustomersPage() {
             >
                 <DialogContent className="max-w-100 rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-[16px] font-semibold">
+                        <DialogTitle className="font-display text-[22px] font-normal leading-tight">
                             Cancel subscription
                         </DialogTitle>
                         <DialogDescription className="font-geist text-[13px]">
@@ -424,7 +424,7 @@ export default function CustomersPage() {
                         ].map((option) => (
                             <label
                                 key={String(option.value)}
-                                className={`flex cursor-pointer gap-3 rounded-[10px] p-3 transition-colors ${
+                                className={`flex cursor-pointer gap-3 rounded-none p-3 transition-colors ${
                                     atPeriodEnd === option.value
                                         ? "bg-muted"
                                         : "hover:bg-muted/50"
@@ -450,7 +450,7 @@ export default function CustomersPage() {
                     </div>
                     <Button
                         variant="destructive"
-                        className="mt-4 h-9 w-full rounded-[8px] text-[13px]"
+                        className="mt-4 h-9 w-full rounded-none text-[13px]"
                         disabled={cancel.isPending}
                         onClick={() => cancel.mutate()}
                     >

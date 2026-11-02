@@ -7,22 +7,23 @@ const LABELS: Record<string, string> = {
     failed: "Failed",
 };
 
-const STYLES: Record<string, string> = {
-    active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    paid: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    trialing: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    past_due: "bg-destructive/10 text-destructive",
-    failed: "bg-destructive/10 text-destructive",
-    cancelled: "bg-muted text-muted-foreground",
+const DOT: Record<string, string> = {
+    active: "bg-emerald-500",
+    paid: "bg-emerald-500",
+    trialing: "bg-amber-500",
+    past_due: "bg-red-500",
+    failed: "bg-red-500",
+    cancelled: "bg-muted-foreground/50",
 };
 
+// Midday-style status: a small square marker and plain text, no capsule.
 export function StatusPill({ status }: { status: string }) {
     return (
-        <span
-            className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                STYLES[status] ?? "bg-muted text-muted-foreground"
-            }`}
-        >
+        <span className="inline-flex items-center gap-1.5 text-[12px] text-foreground/90">
+            <span
+                className={`h-1.5 w-1.5 shrink-0 ${DOT[status] ?? "bg-muted-foreground/50"}`}
+                aria-hidden
+            />
             {LABELS[status] ?? status}
         </span>
     );

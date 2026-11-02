@@ -22,6 +22,7 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { SidebarUserFooter } from "@/components/sidebar-user-footer";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type NavItem = {
     label: string;
@@ -35,11 +36,11 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         return (
             <div
                 aria-disabled
-                className="relative flex h-9 items-center gap-2.5 rounded-[8px] px-2.5 text-[13px] text-muted-foreground/60"
+                className="relative flex h-9 items-center gap-2.5 rounded-none px-2.5 text-[13px] text-muted-foreground/60"
             >
                 <HugeiconsIcon icon={item.icon} size={17} strokeWidth={2} />
                 <span className="flex-1">{item.label}</span>
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium tracking-wide text-muted-foreground uppercase">
+                <span className="bg-muted px-1.5 py-0.5 text-[9px] font-medium tracking-wide text-muted-foreground uppercase">
                     Soon
                 </span>
             </div>
@@ -49,19 +50,21 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
     return (
         <Link
             href={item.href}
-            className="relative flex h-9 items-center gap-2.5 rounded-[8px] px-2.5 text-[13px] transition-colors duration-150 hover:bg-sidebar-accent"
+            className="relative flex h-9 items-center gap-2.5 px-3 text-[13px] transition-colors duration-150 hover:bg-sidebar-accent"
         >
             {active && (
                 <motion.span
                     layoutId="nav-active"
-                    className="absolute inset-0 rounded-[8px] bg-sidebar-accent"
+                    className="absolute inset-0 bg-sidebar-accent"
                     transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                />
+                >
+                    <span className="absolute inset-y-0 left-0 w-0.5 bg-foreground" />
+                </motion.span>
             )}
             <HugeiconsIcon
                 icon={item.icon}
-                size={17}
-                strokeWidth={2}
+                size={16}
+                strokeWidth={1.8}
                 className={
                     active
                         ? "relative z-10 text-foreground"
@@ -151,21 +154,24 @@ export default function DashboardLayout({
                 style={{ "--sidebar-width": "252px" } as React.CSSProperties}
             >
                 <Sidebar>
-                    <SidebarHeader className="h-15 justify-center px-4">
+                    <SidebarHeader className="h-14 justify-center border-b px-4">
                         <Link
                             href="/dashboard"
-                            className="flex items-center gap-2 text-[15px] font-semibold tracking-tight"
+                            className="flex items-center gap-2 text-[15px] font-medium"
                         >
-                            <span className="flex h-6 w-6 items-center justify-center rounded-[7px] bg-brand text-[13px] font-bold text-brand-foreground">
+                            <span className="flex h-6 w-6 items-center justify-center bg-brand font-display text-[14px] text-brand-foreground">
                                 P
                             </span>
                             PocketStrip
                         </Link>
                     </SidebarHeader>
 
-                    <SidebarContent className="px-2 py-2">
+                    <SidebarContent className="px-2 py-3">
                         {slug ? (
                             <>
+                                <SidebarGroupLabel className="px-3 font-mono text-[10px] tracking-wider uppercase">
+                                    Billing
+                                </SidebarGroupLabel>
                                 <nav className="flex flex-col gap-0.5">
                                     {projectNav.map((item) => (
                                         <NavLink
@@ -175,7 +181,7 @@ export default function DashboardLayout({
                                         />
                                     ))}
                                 </nav>
-                                <SidebarGroupLabel className="mt-3 px-2.5 text-[10px] tracking-wider uppercase">
+                                <SidebarGroupLabel className="mt-4 px-3 font-mono text-[10px] tracking-wider uppercase">
                                     Developer
                                 </SidebarGroupLabel>
                                 <nav className="flex flex-col gap-0.5">
@@ -205,16 +211,25 @@ export default function DashboardLayout({
                 </Sidebar>
 
                 <SidebarInset>
-                    <header className="flex h-15 items-center gap-3 border-b px-4">
-                        <SidebarTrigger className="h-8 w-8 rounded-[6px]" />
-                        {slug && (
-                            <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
-                                <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-                                {slug}
-                            </div>
-                        )}
+                    <header className="flex h-14 items-center gap-3 border-b px-4">
+                        <SidebarTrigger className="h-8 w-8" />
+                        <nav className="flex min-w-0 items-center gap-2 font-mono text-[11px] tracking-wide text-muted-foreground uppercase">
+                            <Link href="/dashboard" className="transition-colors hover:text-foreground">
+                                Projects
+                            </Link>
+                            {slug && (
+                                <>
+                                    <span aria-hidden>/</span>
+                                    <span className="flex min-w-0 items-center gap-1.5 text-foreground">
+                                        <span className="h-1.5 w-1.5 shrink-0 bg-brand" />
+                                        <span className="truncate">{slug}</span>
+                                    </span>
+                                </>
+                            )}
+                        </nav>
+                        <ThemeToggle className="ml-auto" />
                     </header>
-                    <main className="flex-1 px-6 py-8">{children}</main>
+                    <main className="flex-1 px-6 py-10 md:px-10">{children}</main>
                 </SidebarInset>
             </SidebarProvider>
         </MotionConfig>

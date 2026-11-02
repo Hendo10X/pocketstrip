@@ -52,7 +52,7 @@ export default function PaymentsPage() {
                     description="Payments appear here after a customer completes checkout and your provider's webhook reaches PocketStrip."
                 />
             ) : (
-                <div className="overflow-hidden rounded-2xl bg-card">
+                <div className="overflow-hidden border bg-card">
                     <table className="w-full text-left text-[13px]">
                         <thead>
                             <tr className="border-b bg-muted/40 font-geist">

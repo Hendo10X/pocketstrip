@@ -106,7 +106,7 @@ export default function PlansPage() {
     const newPlanButton = (
         <Button
             onClick={() => setOpen(true)}
-            className="h-9 gap-1.5 rounded-[8px] px-4 text-[13px]"
+            className="h-9 gap-1.5 rounded-none px-4 text-[13px]"
         >
             <HugeiconsIcon icon={PlusSignIcon} size={15} />
             New plan
@@ -133,7 +133,7 @@ export default function PlansPage() {
                     action={newPlanButton}
                 />
             ) : (
-                <div className="divide-y overflow-hidden rounded-2xl bg-card">
+                <div className="divide-y overflow-hidden border bg-card">
                     {plans.map((plan) => (
                         <div
                             key={plan.id}
@@ -145,7 +145,7 @@ export default function PlansPage() {
                                         {plan.name}
                                     </span>
                                     {plan.trialDays > 0 && (
-                                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                        <span className="bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                                             {plan.trialDays}-day trial
                                         </span>
                                     )}
@@ -155,7 +155,7 @@ export default function PlansPage() {
                                         {plan.features.map((f) => (
                                             <span
                                                 key={f.key}
-                                                className="rounded-[6px] bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+                                                className="rounded-none bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
                                             >
                                                 {f.key}
                                                 {f.limit !== null && `: ${f.limit}`}
@@ -178,7 +178,7 @@ export default function PlansPage() {
                                         navigator.clipboard.writeText(plan.id);
                                         toast.success("Plan ID copied");
                                     }}
-                                    className="flex items-center gap-1 rounded-[6px] px-1.5 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                    className="flex items-center gap-1 rounded-none px-1.5 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                     title="Copy plan ID (used by the SDK)"
                                 >
                                     <HugeiconsIcon icon={Copy01Icon} size={12} />
@@ -193,7 +193,7 @@ export default function PlansPage() {
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="max-w-120 rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-[16px] font-semibold">
+                        <DialogTitle className="font-display text-[22px] font-normal leading-tight">
                             Create plan
                         </DialogTitle>
                     </DialogHeader>
@@ -211,7 +211,7 @@ export default function PlansPage() {
                             <Input
                                 id="plan-name"
                                 placeholder="Pro"
-                                className="h-9 rounded-[8px] text-[13px]"
+                                className="h-9 rounded-none text-[13px]"
                                 value={form.name}
                                 onChange={set("name")}
                                 required
@@ -230,7 +230,7 @@ export default function PlansPage() {
                                     min="0"
                                     step="0.01"
                                     placeholder="29.00"
-                                    className="h-9 rounded-[8px] text-[13px] tabular-nums"
+                                    className="h-9 rounded-none text-[13px] tabular-nums"
                                     value={form.price}
                                     onChange={set("price")}
                                     required
@@ -276,7 +276,7 @@ export default function PlansPage() {
                                     id="plan-trial"
                                     type="number"
                                     min="0"
-                                    className="h-9 rounded-[8px] text-[13px] tabular-nums"
+                                    className="h-9 rounded-none text-[13px] tabular-nums"
                                     value={form.trialDays}
                                     onChange={set("trialDays")}
                                 />
@@ -293,7 +293,7 @@ export default function PlansPage() {
                             <Input
                                 id="plan-features"
                                 placeholder="reports, seats:5, api_calls:10000"
-                                className="h-9 rounded-[8px] font-mono text-[13px]"
+                                className="h-9 rounded-none font-mono text-[13px]"
                                 value={form.features}
                                 onChange={set("features")}
                             />
@@ -305,7 +305,7 @@ export default function PlansPage() {
 
                         <Button
                             type="submit"
-                            className="h-9 w-full rounded-[8px] text-[13px]"
+                            className="h-9 w-full rounded-none text-[13px]"
                             disabled={createPlan.isPending}
                         >
                             {createPlan.isPending ? "Creating…" : "Create plan"}

@@ -50,7 +50,7 @@ const STATUS_STYLE: Record<string, string> = {
 function StatusPill({ status }: { status: string }) {
     return (
         <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+            className={`px-2 py-0.5 text-[11px] font-medium ${
                 STATUS_STYLE[status] ?? "bg-muted text-muted-foreground"
             }`}
         >
@@ -91,7 +91,7 @@ export default async function PortalPage({
                 </span>
             </div>
 
-            <h1 className="text-[22px] font-semibold tracking-tight">
+            <h1 className="font-display text-[32px] leading-[1.05] tracking-[-0.02em]">
                 Your subscription
             </h1>
             <p className="mt-1 text-[13px] text-muted-foreground">
@@ -100,7 +100,7 @@ export default async function PortalPage({
 
             <div className="mt-8">
                 {data.subscriptions.length === 0 ? (
-                    <div className="rounded-2xl bg-card p-8 text-center">
+                    <div className="border bg-card p-8 text-center">
                         <p className="text-[15px] font-medium">
                             No subscriptions yet
                         </p>
@@ -114,7 +114,7 @@ export default async function PortalPage({
                         {data.subscriptions.map((sub) => (
                             <div
                                 key={sub.id}
-                                className="rounded-2xl bg-card p-5"
+                                className="border bg-card p-5"
                             >
                                 <div className="flex items-center justify-between">
                                     <span className="text-[15px] font-medium">

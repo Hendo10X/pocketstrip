@@ -70,7 +70,7 @@ function copy(text: string, label: string) {
 
 function CopyRow({ value, label }: { value: string; label: string }) {
     return (
-        <div className="flex items-center gap-2 rounded-[8px] bg-muted px-3 py-2">
+        <div className="flex items-center gap-2 rounded-none bg-muted px-3 py-2">
             <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-[12px]">
                 {value}
             </code>
@@ -78,7 +78,7 @@ function CopyRow({ value, label }: { value: string; label: string }) {
                 type="button"
                 onClick={() => copy(value, label)}
                 aria-label={`Copy ${label}`}
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[5px] text-muted-foreground transition-colors hover:text-foreground active:scale-[0.96]"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-none text-muted-foreground transition-colors hover:text-foreground active:scale-[0.96]"
             >
                 <HugeiconsIcon icon={Copy01Icon} size={14} />
             </button>
@@ -176,7 +176,7 @@ export default function SettingsPage() {
                             return (
                                 <div
                                     key={meta.id}
-                                    className="flex items-start justify-between gap-4 rounded-2xl bg-card p-5"
+                                    className="flex items-start justify-between gap-4 border bg-card p-5"
                                 >
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
@@ -184,16 +184,16 @@ export default function SettingsPage() {
                                                 {meta.name}
                                             </span>
                                             {row ? (
-                                                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                                                <span className="bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                                                     Connected
                                                 </span>
                                             ) : (
-                                                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                                <span className="bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                                                     Not connected
                                                 </span>
                                             )}
                                             {row?.isDefault && (
-                                                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                                <span className="bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                                                     Default
                                                 </span>
                                             )}
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                                             {row && (
                                                 <Button
                                                     variant="outline"
-                                                    className="h-8 rounded-[8px] px-3 text-[12px]"
+                                                    className="h-8 rounded-none px-3 text-[12px]"
                                                     disabled={disconnect.isPending}
                                                     onClick={() =>
                                                         disconnect.mutate(meta.id)
@@ -229,7 +229,7 @@ export default function SettingsPage() {
                                                 </Button>
                                             )}
                                             <Button
-                                                className="h-8 rounded-[8px] px-3 text-[12px]"
+                                                className="h-8 rounded-none px-3 text-[12px]"
                                                 onClick={() => openDialog(meta.id)}
                                             >
                                                 {row ? "Update keys" : "Connect"}
@@ -252,7 +252,7 @@ export default function SettingsPage() {
             {project && (
                 <section className="mt-10">
                     <h2 className="mb-3 text-[15px] font-medium">Project</h2>
-                    <div className="space-y-4 rounded-2xl bg-card p-5">
+                    <div className="space-y-4 border bg-card p-5">
                         <div>
                             <p className="font-geist text-[12px] text-muted-foreground">
                                 Name
@@ -277,7 +277,7 @@ export default function SettingsPage() {
             >
                 <DialogContent className="max-w-120 rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-[16px] font-semibold">
+                        <DialogTitle className="font-display text-[22px] font-normal leading-tight">
                             Connect {editingMeta?.name}
                         </DialogTitle>
                         <DialogDescription className="font-geist text-[13px]">
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                                 type="password"
                                 autoComplete="off"
                                 placeholder="sk_test_…"
-                                className="h-9 rounded-[8px] font-mono text-[13px]"
+                                className="h-9 rounded-none font-mono text-[13px]"
                                 value={secretKey}
                                 onChange={(e) => setSecretKey(e.target.value)}
                                 required
@@ -324,7 +324,7 @@ export default function SettingsPage() {
                                     type="password"
                                     autoComplete="off"
                                     placeholder="whsec_…"
-                                    className="h-9 rounded-[8px] font-mono text-[13px]"
+                                    className="h-9 rounded-none font-mono text-[13px]"
                                     value={webhookSecret}
                                     onChange={(e) =>
                                         setWebhookSecret(e.target.value)
@@ -376,7 +376,7 @@ export default function SettingsPage() {
 
                         <Button
                             type="submit"
-                            className="h-9 w-full rounded-[8px] text-[13px]"
+                            className="h-9 w-full rounded-none text-[13px]"
                             disabled={connect.isPending}
                         >
                             {connect.isPending ? "Verifying…" : "Verify and connect"}

@@ -4,13 +4,21 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Design system — after Midday (midday.ai):
+ * near-black canvas, 1px hairline borders, sharp corners, no shadows,
+ * a serif display face for headlines, quiet greys for secondary text.
+ * The lime brand accent is reserved for a few marks and buttons.
+ */
+
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --font-sans: var(--font-sans);
     --font-geist: var(--font-geist-sans);
     --font-mono: var(--font-geist-mono);
-    --font-heading: var(--font-sans);
+    --font-display: var(--font-hedvig-serif);
+    --font-heading: var(--font-hedvig-serif);
 
     --color-brand: var(--brand);
     --color-brand-foreground: var(--brand-foreground);
@@ -47,6 +55,7 @@
     --color-card-foreground: var(--card-foreground);
     --color-card: var(--card);
 
+    /* Sharp corners everywhere: every rounded-* token resolves to 0. */
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -57,106 +66,85 @@
 }
 
 :root {
-    /* Layout & Custom Spacing Tokens */
-    --radius-xs: 4px;
-    --radius-sm: 6px;
-    --radius-md: 8px;
-    --radius-lg: 10px;
-    --radius-xl: 12px;
-
-    --space-1: 4px;
-    --space-2: 8px;
-    --space-3: 12px;
-    --space-4: 16px;
-    --space-6: 24px;
-    --space-8: 32px;
-    --space-10: 40px;
-    --space-12: 48px;
-    --space-16: 64px;
-    --space-24: 96px;
-
-    --header-height: 60px;
-    --sidebar-width: 280px;
+    --radius: 0rem;
+    --header-height: 56px;
 
     --font-sans: var(--font-zalando);
     --font-mono: var(--font-geist-mono);
 
-    /* Brand accent */
     --brand: #c6ff00;
-    --brand-foreground: oklch(0.2 0 0);
+    --brand-foreground: #0d0d0d;
 
-    /* Color Palette (Light Mode) */
-    --background: oklch(0.968 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    /* Light */
+    --background: #fcfcfc;
+    --foreground: #121212;
+    --card: #ffffff;
+    --card-foreground: #121212;
+    --popover: #ffffff;
+    --popover-foreground: #121212;
+    --primary: #121212;
+    --primary-foreground: #fafafa;
+    --secondary: #f2f2f2;
+    --secondary-foreground: #121212;
+    --muted: #f2f2f2;
+    --muted-foreground: #6b6b6b;
+    --accent: #f2f2f2;
+    --accent-foreground: #121212;
+    --destructive: #d93636;
+    --border: #e6e6e6;
+    --input: #e6e6e6;
+    --ring: #a3a3a3;
 
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    --chart-1: #121212;
+    --chart-2: #6b6b6b;
+    --chart-3: #a3a3a3;
+    --chart-4: #d4d4d4;
+    --chart-5: #ededed;
 
-    --radius: 0.75rem;
-
-    --sidebar: oklch(1 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar: #fcfcfc;
+    --sidebar-foreground: #121212;
+    --sidebar-primary: #121212;
+    --sidebar-primary-foreground: #fafafa;
+    --sidebar-accent: #f2f2f2;
+    --sidebar-accent-foreground: #121212;
+    --sidebar-border: #e6e6e6;
+    --sidebar-ring: #a3a3a3;
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --background: #0d0d0d;
+    --foreground: #fafafa;
+    --card: #121212;
+    --card-foreground: #fafafa;
+    --popover: #121212;
+    --popover-foreground: #fafafa;
+    --primary: #fafafa;
+    --primary-foreground: #121212;
+    --secondary: #1c1c1c;
+    --secondary-foreground: #fafafa;
+    --muted: #1c1c1c;
+    --muted-foreground: #878787;
+    --accent: #1c1c1c;
+    --accent-foreground: #fafafa;
+    --destructive: #f26d6d;
+    --border: #232323;
+    --input: #2a2a2a;
+    --ring: #4a4a4a;
 
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    --chart-1: #fafafa;
+    --chart-2: #878787;
+    --chart-3: #4a4a4a;
+    --chart-4: #2a2a2a;
+    --chart-5: #1c1c1c;
 
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --sidebar: #0d0d0d;
+    --sidebar-foreground: #fafafa;
+    --sidebar-primary: #fafafa;
+    --sidebar-primary-foreground: #121212;
+    --sidebar-accent: #1c1c1c;
+    --sidebar-accent-foreground: #fafafa;
+    --sidebar-border: #232323;
+    --sidebar-ring: #4a4a4a;
 }
 
 @layer base {
@@ -171,5 +159,37 @@
     }
     html {
         @apply font-sans;
+    }
+}
+
+@layer utilities {
+    /* Hairline grid, used behind marketing sections and auth panels. */
+    .bg-grid {
+        background-image:
+            linear-gradient(to right, var(--border) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+        background-size: 48px 48px;
+    }
+
+    /* Fades a grid/background out toward the edges. */
+    .mask-fade {
+        mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    }
+}
+
+/* Money moving along the hub diagram's connector lines. */
+@keyframes flow {
+    to {
+        stroke-dashoffset: -24;
+    }
+}
+
+.animate-flow {
+    animation: flow 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-flow {
+        animation: none;
     }
 }

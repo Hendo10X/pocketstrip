@@ -84,7 +84,7 @@ export default function DevelopersPage() {
         <div className="mx-auto w-full max-w-5xl">
             <div className="mb-8 flex items-end justify-between">
                 <div>
-                    <h1 className="text-[22px] font-semibold tracking-tight">
+                    <h1 className="font-display text-[32px] leading-[1.05] tracking-[-0.02em]">
                         Developers
                     </h1>
                     <p className="mt-1 font-geist text-[13px] text-muted-foreground">
@@ -94,14 +94,14 @@ export default function DevelopersPage() {
                 <Dialog open={open} onOpenChange={setOpen}>
                     <Button
                         onClick={() => setOpen(true)}
-                        className="h-9 gap-1.5 rounded-[8px] px-4 text-[13px]"
+                        className="h-9 gap-1.5 rounded-none px-4 text-[13px]"
                     >
                         <HugeiconsIcon icon={PlusSignIcon} size={15} />
                         New API key
                     </Button>
                     <DialogContent className="max-w-100 rounded-2xl">
                         <DialogHeader>
-                            <DialogTitle className="text-[16px] font-semibold">
+                            <DialogTitle className="font-display text-[22px] font-normal leading-tight">
                                 Create API key
                             </DialogTitle>
                         </DialogHeader>
@@ -122,7 +122,7 @@ export default function DevelopersPage() {
                                 <Input
                                     id="key-name"
                                     placeholder="Production"
-                                    className="h-9 rounded-[8px] text-[13px]"
+                                    className="h-9 rounded-none text-[13px]"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     required
@@ -131,7 +131,7 @@ export default function DevelopersPage() {
                             </div>
                             <Button
                                 type="submit"
-                                className="h-9 w-full rounded-[8px] text-[13px]"
+                                className="h-9 w-full rounded-none text-[13px]"
                                 disabled={createKey.isPending}
                             >
                                 {createKey.isPending
@@ -149,14 +149,14 @@ export default function DevelopersPage() {
                     <Skeleton className="h-11 rounded-lg" />
                 </div>
             ) : keys.length === 0 ? (
-                <div className="flex flex-col items-center rounded-2xl bg-card py-16 text-center">
+                <div className="flex flex-col items-center border bg-card py-16 text-center">
                     <p className="text-[15px] font-medium">No API keys yet</p>
                     <p className="mt-1 max-w-xs font-geist text-[13px] text-muted-foreground">
                         Create a key to start integrating the PocketStrip SDK.
                     </p>
                 </div>
             ) : (
-                <div className="overflow-hidden rounded-2xl bg-card">
+                <div className="overflow-hidden border bg-card">
                     <table className="w-full text-left text-[13px]">
                         <thead>
                             <tr className="border-b bg-muted/40 font-geist">
@@ -211,7 +211,7 @@ export default function DevelopersPage() {
             >
                 <DialogContent className="max-w-108 rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-[16px] font-semibold">
+                        <DialogTitle className="font-display text-[22px] font-normal leading-tight">
                             Copy your API key
                         </DialogTitle>
                     </DialogHeader>
@@ -219,7 +219,7 @@ export default function DevelopersPage() {
                         This is the only time you&apos;ll see the full key. Store
                         it somewhere safe — you can&apos;t retrieve it later.
                     </p>
-                    <div className="mt-3 flex items-center gap-2 rounded-[8px] bg-muted p-3">
+                    <div className="mt-3 flex items-center gap-2 rounded-none bg-muted p-3">
                         <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-[12px]">
                             {revealedKey}
                         </code>
@@ -227,7 +227,7 @@ export default function DevelopersPage() {
                     <Button
                         onClick={copyKey}
                         variant={copied ? "brand" : "default"}
-                        className="mt-4 h-9 w-full gap-1.5 rounded-[8px] text-[13px]"
+                        className="mt-4 h-9 w-full gap-1.5 rounded-none text-[13px]"
                     >
                         <HugeiconsIcon
                             icon={copied ? Tick02Icon : Copy01Icon}

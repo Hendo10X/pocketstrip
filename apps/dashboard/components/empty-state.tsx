@@ -8,7 +8,7 @@ export function EmptyState({
     action?: React.ReactNode;
 }) {
     return (
-        <div className="flex flex-col items-center rounded-2xl bg-card py-16 text-center">
+        <div className="flex flex-col items-center border bg-card py-16 text-center">
             <p className="text-[15px] font-medium">{title}</p>
             <p className="mt-1 max-w-sm font-geist text-[13px] text-muted-foreground">
                 {description}

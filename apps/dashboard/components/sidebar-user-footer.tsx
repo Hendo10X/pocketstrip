@@ -38,7 +38,7 @@ export function SidebarUserFooter() {
                 <button
                     onClick={handleSignOut}
                     aria-label="Sign out"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground active:scale-[0.96]"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-none text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground active:scale-[0.96]"
                 >
                     <HugeiconsIcon
                         icon={Logout01Icon}
